@@ -1,0 +1,12 @@
+{
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		"types": [ "node" ],
+		"sourceMap": false,
+		"outDir": "dist",
+		"noEmit": false
+	},
+	"exclude": [
+		"**/*.spec.ts"
+	]
+}

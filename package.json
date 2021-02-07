@@ -1,0 +1,53 @@
+{
+  "name": "core-types-ts",
+  "version": "0.0.0-development",
+  "description": "core-types ⬌ TypeScript interface conversion",
+  "author": "Gustaf Räntilä",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/grantila/core-types-ts/issues"
+  },
+  "homepage": "https://github.com/grantila/core-types-ts#readme",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "directories": {},
+  "engines": {
+    "node": ">=12"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "./node_modules/.bin/rimraf dist && ./node_modules/.bin/tsc -p tsconfig.prod.json",
+    "test": "node_modules/.bin/jest",
+    "cz": "git-cz"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/grantila/core-types-ts"
+  },
+  "keywords": [
+    "type",
+    "types",
+    "generic",
+    "typescript",
+    "json"
+  ],
+  "dependencies": {
+    "core-types": "^1.1.0",
+    "typescript": "^4.1.3"
+  },
+  "devDependencies": {
+    "@types/jest": "^26.0.20",
+    "cz-conventional-changelog": "^3.3.0",
+    "jest": "^26.4.2",
+    "rimraf": "^3.0.2",
+    "ts-jest": "^26.5.0",
+    "ts-node": "^9.1.1"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  }
+}
