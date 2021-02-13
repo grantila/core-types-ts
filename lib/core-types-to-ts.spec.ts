@@ -200,11 +200,39 @@ describe( "core-types-to-ts", ( ) =>
 				type: 'object',
 				properties: {
 					user: {
-						node: { type: 'ref', ref: 'User' }, required: true
+						node: {
+							title: 'User ref',
+							type: 'ref',
+							ref: 'User'
+						},
+						required: true,
 					},
-					line: { node: { type: 'string' }, required: true },
+					line: {
+						node: {
+							examples: 'This is a line',
+							type: 'string',
+						},
+						required: true
+					},
 				},
 				additionalProperties: false,
+			},
+			{
+				title: 'Thing ref',
+				name: 'Thingy',
+				type: 'or',
+				or: [
+					{
+						type: 'ref',
+						ref: 'Thing',
+						title: 'Thing is the preferred type',
+						see: 'The Thing documentation',
+					},
+					{
+						type: 'number',
+						title: 'Just a number',
+					},
+				],
 			},
 		] ) );
 

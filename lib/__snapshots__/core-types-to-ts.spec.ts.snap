@@ -46,10 +46,12 @@ exports[`core-types-to-ts should write annotations properly 1`] = `
  * This type holds the user information, such as name
  *
  * @example
- *     \\"{ name: \\\\\\"Joe\\\\\\" }\\"
+ *     { name: \\"Joe\\" }
  *
  * @default
- *     \\"{ user: \\\\\\"\\\\\\" }\\"
+ *     { user: \\"\\" }
+ *
+ * @see http://username
  */
 export interface User {
     /**
@@ -62,9 +64,24 @@ export interface User {
 
 // A chat line
 export interface ChatLine {
+    // User ref
     user: User;
+    /**
+     * @example
+     *     This is a line
+     */
     line: string;
 }
+
+// Thing ref
+export type Thingy = /**
+ * Thing is the preferred type
+ *
+ * @see The Thing documentation
+ */
+Thing | 
+// Just a number
+number;
 "
 `;
 

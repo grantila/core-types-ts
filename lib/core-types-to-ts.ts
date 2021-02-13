@@ -186,17 +186,19 @@ type TsTypeReturn = TsTypeReturnAsObject | TsTypeReturnAsFlowType;
 
 function tsTypeUnion( ctx: Context, node: OrType ): ts.TypeNode
 {
-	// TODO: Add annotations
 	return factory.createUnionTypeNode(
-		node.or.map( elem => tsTypeAndOrSchema( ctx, elem ) )
+		node.or.map( elem =>
+			wrapAnnotations( tsTypeAndOrSchema( ctx, elem ), elem )
+		)
 	)
 }
 
 function tsTypeIntersection( ctx: Context, node: AndType ): ts.TypeNode
 {
-	// TODO: Add annotations
 	return factory.createIntersectionTypeNode(
-		node.and.map( elem => tsTypeAndOrSchema( ctx, elem ) )
+		node.and.map( elem =>
+			wrapAnnotations( tsTypeAndOrSchema( ctx, elem ), elem )
+		)
 	)
 }
 
@@ -210,7 +212,6 @@ function tsTypeAndOrSchema( ctx: Context, node: NodeType ): ts.TypeNode
 
 function tsTypeAndOr( ctx: Context, andOr: AndType | OrType ): ts.TypeNode
 {
-	// TODO: Add annotations
 	if ( andOr.type === 'and' )
 		return tsTypeIntersection( ctx, andOr );
 	else
@@ -226,8 +227,6 @@ function tsAny( ctx: Context ): ts.TypeNode
 
 function tsType( ctx: Context, node: NodeType ): TsTypeReturn
 {
-	// TODO: Add annotations
-
 	if ( node.type === 'and' || node.type === 'or' )
 		return { type: 'flow-type', node: tsTypeAndOr( ctx, node ) };
 
@@ -238,7 +237,10 @@ function tsType( ctx: Context, node: NodeType ): TsTypeReturn
 		( typeof node & { const: unknown; enum: unknown; } );
 
 	if ( _const )
-		return { type: 'flow-type', node: tsConstType( ctx, node, _const ) };
+		return {
+			type: 'flow-type',
+			node: tsConstType( ctx, node, _const ),
+		};
 	else if ( _enum )
 		return {
 			type: 'flow-type',
@@ -428,6 +430,5 @@ function tsArrayType( ctx: Context, node: ArrayType | TupleType ): ts.TypeNode
 
 function tsRefType( node: RefType ): ts.TypeNode
 {
-	// TODO: Add annotations
 	return factory.createTypeReferenceNode( node.ref );
 }
