@@ -10,6 +10,7 @@ import {
 	ArrayType,
 	TupleType,
 	CoreTypesErrorMeta,
+	ConversionResult,
 } from "core-types"
 import * as ts from 'typescript'
 
@@ -89,7 +90,7 @@ export function convertCoreTypesToTypeScript(
 	doc: NodeDocument,
 	opts: ToTsOptions = { }
 )
-: string
+: ConversionResult
 {
 	const {
 		// warn = ( msg: string ) => console.warn( msg ),
@@ -109,6 +110,8 @@ export function convertCoreTypesToTypeScript(
 			`core-types version ${version} not supported`
 		);
 
+	const convertedTypes: Array< string > = [ ];
+
 	const sourceCode =
 		types
 		.map( node =>
@@ -125,6 +128,8 @@ export function convertCoreTypesToTypeScript(
 				? declareType( declaration, name, ret.node )
 				: declareInterface( declaration, name, ret.properties );
 
+			convertedTypes.push( name );
+
 			return doExport( typeDeclaration );
 		} )
 		.map( tsNode =>
@@ -134,7 +139,14 @@ export function convertCoreTypesToTypeScript(
 
 	const header = createHeader( opts );
 
-	return header + sourceCode + ( sourceCode.endsWith( "\n" ) ? "" : "\n" );
+	return {
+		data:
+			header +
+			sourceCode +
+			( sourceCode.endsWith( "\n" ) ? "" : "\n" ),
+		convertedTypes,
+		notConvertedTypes: [ ],
+	};
 }
 
 function createExportModifier( declaration: boolean )

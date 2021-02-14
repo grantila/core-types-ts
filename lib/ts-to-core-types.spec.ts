@@ -13,7 +13,7 @@ it( "object literal type", ( ) =>
 		foo: string;
 		bar: { baz: number; };
 	}
-	` ).types;
+	` ).data.types;
 
 	equal( coreTypes, [
 		{
@@ -44,7 +44,7 @@ it( "basic interface with additional properties", ( ) =>
 		foo: string | boolean;
 		[ key: string ]: number;
 	}
-	` ).types;
+	` ).data.types;
 
 	equal( coreTypes, [
 		{
@@ -100,7 +100,7 @@ it( "implicit non-exported interface with all types", ( ) =>
 		[ key: string ]: number;
 	}
 	export type stringOrFiveOrFalseOrNull = string | 5 | false | null;
-	` ).types;
+	` ).data.types;
 
 	equal( coreTypes, [
 		{
@@ -245,7 +245,7 @@ describe( "optional tuple arguments", ( ) =>
 	{
 		const coreTypes = convertTypeScriptToCoreTypes( `
 			export type T = [ string?, number? ];
-		` ).types;
+		` ).data.types;
 
 		equal( coreTypes, [
 			{
@@ -265,7 +265,7 @@ describe( "optional tuple arguments", ( ) =>
 	{
 		const coreTypes = convertTypeScriptToCoreTypes( `
 			export type T = [ string, number? ];
-		` ).types;
+		` ).data.types;
 
 		equal( coreTypes, [
 			{
@@ -285,7 +285,7 @@ describe( "optional tuple arguments", ( ) =>
 	{
 		const coreTypes = convertTypeScriptToCoreTypes( `
 			export type T = [ string, number ];
-		` ).types;
+		` ).data.types;
 
 		equal( coreTypes, [
 			{
@@ -316,7 +316,7 @@ describe( "non-exported types", ( ) =>
 			{
 				nonExported: 'ignore'
 			}
-		).types;
+		).data.types;
 
 		equal( coreTypes, [
 			{
@@ -342,7 +342,7 @@ describe( "non-exported types", ( ) =>
 			{
 				nonExported: 'include'
 			}
-		).types;
+		).data.types;
 
 		equal( coreTypes, [
 			{
@@ -373,7 +373,7 @@ describe( "non-exported types", ( ) =>
 			{
 				nonExported: 'inline'
 			}
-		).types;
+		).data.types;
 
 		equal( coreTypes, [
 			{
@@ -407,7 +407,7 @@ describe( "non-exported types", ( ) =>
 			{
 				nonExported: 'inline'
 			}
-		).types;
+		).data.types;
 
 		expect( convert ).toThrowError( /Cycling type found/ );
 	} );
@@ -425,7 +425,7 @@ describe( "non-exported types", ( ) =>
 			{
 				nonExported: 'include-if-referenced'
 			}
-		).types;
+		).data.types;
 
 		equal( coreTypes, [
 			{
@@ -475,7 +475,7 @@ describe( "comments", ( ) =>
 			 */
 			bar: { baz: number; };
 		}
-		` ).types;
+		` ).data.types;
 
 		equal( coreTypes, [
 			{
@@ -526,7 +526,7 @@ describe( "unsupported", ( ) =>
 				}
 			`,
 			{ warn }
-		).types;
+		).data.types;
 
 		equal( coreTypes, [
 			{
@@ -557,7 +557,7 @@ describe( "generics", ( ) =>
 				export type Bar = Partial< Foo >;
 			`,
 			{ warn }
-		).types;
+		).data.types;
 
 		equal( coreTypes, [
 			{
@@ -587,7 +587,7 @@ describe( "generics", ( ) =>
 				}
 			`,
 			{ warn, unsupported: 'warn' }
-		).types;
+		).data.types;
 
 		equal( coreTypes, [ ] );
 		expect( warn.mock.calls.length ).toBe( 1 );
@@ -603,7 +603,7 @@ describe( "generics", ( ) =>
 				export type Foo< T > = number | T;
 			`,
 			{ warn, unsupported: 'warn' }
-		).types;
+		).data.types;
 
 		equal( coreTypes, [ ] );
 		expect( warn.mock.calls.length ).toBe( 1 );

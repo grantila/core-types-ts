@@ -12,6 +12,7 @@ import {
 	getPositionOffset,
 	UnsupportedError,
 	isNonNullable,
+	ConversionResult,
 } from 'core-types'
 
 import { FromTsOptions } from './types'
@@ -62,7 +63,7 @@ export function convertTypeScriptToCoreTypes(
 	sourceCode: string,
 	options?: FromTsOptions
 )
-: NodeDocument
+: ConversionResult< NodeDocument >
 {
 	const {
 		warn = defaultWarn( sourceCode ),
@@ -146,10 +147,15 @@ export function convertTypeScriptToCoreTypes(
 			);
 		} );
 
+	const notConvertedTypes = new Set< string >( );
+
 	const convertTopLevel = ( statement: TopLevelDeclaration ) =>
 	{
 		ctx.cyclicState = new Set( );
-		return fromTsTopLevelNode( statement, ctx );
+		const type = fromTsTopLevelNode( statement, ctx );
+		if ( !type )
+			notConvertedTypes.add( statement.name.getText( ) );
+		return type;
 	};
 
 	const types = declarations
@@ -175,7 +181,11 @@ export function convertTypeScriptToCoreTypes(
 			.filter( < T >( v: T ): v is NonNullable< T > => !!v )
 	);
 
-	return { version: 1, types };
+	return {
+		data: { version: 1, types },
+		convertedTypes: types.map( ( { name } ) => name ),
+		notConvertedTypes: [ ...notConvertedTypes ],
+	};
 }
 
 function isGenericType( node: ts.Node )

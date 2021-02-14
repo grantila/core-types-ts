@@ -29,6 +29,8 @@ Other conversion packages:
 
 # Usage
 
+There are two conversion functions, `convertCoreTypesToTypeScript` and `convertTypeScriptToCoreTypes`, both returning a wrapped value, of the type [`ConversionResult`](https://github.com/grantila/core-types#conversion).
+
 
 ## core-types to TypeScript
 
@@ -37,7 +39,7 @@ import { convertCoreTypesToTypeScript } from 'core-types-ts'
 
 let doc; // This core-types document comes from somewhere
 
-const tsSourceCode = convertCoreTypesToTypeScript( doc );
+const { data: tsSourceCode } = convertCoreTypesToTypeScript( doc );
 ```
 
 You can provide options as a second argument fn the type:
@@ -84,7 +86,7 @@ import { convertTypeScriptToCoreTypes } from 'core-types-ts'
 
 let sourceCode; // This source code comes from somewhere
 
-const doc = convertTypeScriptToCoreTypes( sourceCode );
+const { data: doc } = convertTypeScriptToCoreTypes( sourceCode );
 ```
 
 An optional second argument can be provided on the form
