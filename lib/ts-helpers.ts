@@ -4,6 +4,7 @@ import {
 	stringifyAnnotations,
 	Location,
 } from "core-types"
+import { ToTsOptions } from './types'
 
 
 const { factory } = ts;
@@ -22,21 +23,34 @@ export function safeName( name: string ): ts.StringLiteral | ts.Identifier
 
 export function wrapAnnotations<T extends ts.Node>(
 	tsNode: T,
-	node: CoreTypeAnnotations
+	node: CoreTypeAnnotations,
+	blockComment = true
 ): T
 {
-	const comment = stringifyAnnotations( node, { formatWhitespace: true } );
+	const comment =
+		stringifyAnnotations( node, { formatWhitespace: blockComment } );
 	if ( !comment )
 		return tsNode;
 
-	return ts.addSyntheticLeadingComment(
-		tsNode,
-		comment.includes( "\n" )
-			? ts.SyntaxKind.MultiLineCommentTrivia
-			: ts.SyntaxKind.SingleLineCommentTrivia,
-		comment,
-		true
-	);
+	if ( blockComment )
+		return ts.addSyntheticLeadingComment(
+			tsNode,
+			ts.SyntaxKind.MultiLineCommentTrivia,
+			comment,
+			true
+		);
+
+	return comment.split( "\n" )
+		.reduce(
+			( node, line ) =>
+				ts.addSyntheticLeadingComment(
+					node,
+					ts.SyntaxKind.SingleLineCommentTrivia,
+					` ${line}`,
+					true
+				),
+			tsNode
+		);
 }
 
 export function makeGenericComment(
@@ -91,4 +105,55 @@ export function isExportedDeclaration( node: ts.Statement )
 	return !!node.modifiers?.some( modifier =>
 		modifier.kind === ts.SyntaxKind.ExportKeyword
 	);
+}
+
+export type HeaderOptions =
+	Pick<
+		ToTsOptions,
+		| 'filename'
+		| 'sourceFilename'
+		| 'userPackage'
+		| 'userPackageUrl'
+		| 'noDisableLintHeader'
+		| 'noDescriptiveHeader'
+	> & {
+		createdByPackage: string;
+		createdByUrl: string;
+	};
+
+export function createCodeHeader( {
+	filename,
+	sourceFilename,
+	userPackage,
+	userPackageUrl,
+	noDisableLintHeader = false,
+	noDescriptiveHeader = false,
+	createdByPackage,
+	createdByUrl,
+}: HeaderOptions )
+{
+	if ( noDisableLintHeader && noDescriptiveHeader )
+		return '';
+
+	const lintHeader = "/* tslint:disable */\n/* eslint-disable */";
+	const descriptiveHeader = ( ) =>
+	{
+		const theFile = !filename ? 'This file' : `The file ${filename}`;
+		const source = !sourceFilename ? '' : ` from ${sourceFilename}`;
+		const onbehalf = userPackage ? ` on behalf of ${userPackage}` : '';
+		const link = userPackageUrl ? `\n - {@link ${userPackageUrl}}` : '';
+		return makeGenericComment( ( [
+			`${theFile} is generated${source} by ` +
+				`${createdByPackage}${onbehalf}, ` +
+				'DO NOT EDIT.',
+			"For more information, see:",
+			` - {@link ${createdByUrl}}`,
+			...( link ? [ link ] : [ ] ),
+		] ) );
+	}
+
+	return [
+		noDisableLintHeader ? '' : lintHeader,
+		noDescriptiveHeader ? '' : descriptiveHeader( ),
+	].join( "\n" ) + "\n\n";
 }

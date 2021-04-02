@@ -11,21 +11,25 @@ import {
 	TupleType,
 	CoreTypesErrorMeta,
 	ConversionResult,
+	UnsupportedError,
+	NamedType,
 } from "core-types"
 import * as ts from 'typescript'
 
-import { UnsupportedError } from "core-types"
 import {
-	makeGenericComment,
 	safeName,
 	tsUnknownTypeAnnotation,
 	wrapAnnotations,
 	generateCode,
+	createCodeHeader,
 } from "./ts-helpers"
 import { ToTsOptions } from "./types"
 
 
 const { factory } = ts;
+
+const createdByPackage = 'core-types-ts';
+const createdByUrl = 'https://github.com/grantila/core-types-ts';
 
 interface Context
 {
@@ -42,67 +46,12 @@ function throwUnsupported(
 	throw new UnsupportedError( msg, { loc: node.loc, ...meta } );
 }
 
-type HeaderOptions = Pick<
-	ToTsOptions,
-	| 'filename'
-	| 'sourceFilename'
-	| 'userPackage'
-	| 'userPackageUrl'
-	| 'noDisableLintHeader'
-	| 'noDescriptiveHeader'
->;
-
-function createHeader( {
-	filename,
-	sourceFilename,
-	userPackage,
-	userPackageUrl,
-	noDisableLintHeader = false,
-	noDescriptiveHeader = false,
-}: HeaderOptions )
-{
-	if ( noDisableLintHeader && noDescriptiveHeader )
-		return '';
-
-	const lintHeader = "/* tslint:disable */\n/* eslint-disable */";
-	const descriptiveHeader = ( ) =>
-	{
-		const theFile = !filename ? 'This file' : `The file ${filename}`;
-		const source = !sourceFilename ? '' : ` from ${sourceFilename}`;
-		const onbehalf = userPackage ? ` on behalf of ${userPackage}` : '';
-		const link = userPackageUrl ? `\n - {@link ${userPackageUrl}}` : '';
-		return makeGenericComment( ( [
-			`${theFile} is generated${source} by core-types-ts${onbehalf}, ` +
-				'DO NOT EDIT.',
-			"For more information, see:",
-			` - {@link https://github.com/grantila/core-types-ts}`,
-			...( link ? [ link ] : [ ] ),
-		] ) );
-	}
-
-	return [
-		noDisableLintHeader ? '' : lintHeader,
-		noDescriptiveHeader ? '' : descriptiveHeader( ),
-	].join( "\n" ) + "\n\n";
-}
-
 export function convertCoreTypesToTypeScript(
 	doc: NodeDocument,
 	opts: ToTsOptions = { }
 )
 : ConversionResult
 {
-	const {
-		// warn = ( msg: string ) => console.warn( msg ),
-		useUnknown = false,
-		declaration = false,
-		// unsupported = 'warn',
-	} = opts;
-
-	const ctx: Context = {
-		useUnknown,
-	};
-
 	const { version, types } = doc;
 
 	if ( version !== 1 )
@@ -118,26 +67,22 @@ export function convertCoreTypesToTypeScript(
 		{
 			const { name } = node;
 
-			const ret = tsType( ctx, node );
-
-			const doExport = ( tsNode: ts.Declaration ) =>
-				wrapAnnotations( tsNode, node );
-
-			const typeDeclaration =
-				ret.type === 'flow-type'
-				? declareType( declaration, name, ret.node )
-				: declareInterface( declaration, name, ret.properties );
+			const tsNode = convertSingleCoreTypeToTypeScriptAst( node, opts );
 
 			convertedTypes.push( name );
 
-			return doExport( typeDeclaration );
+			return tsNode;
 		} )
 		.map( tsNode =>
 			generateCode( tsNode )
 		)
 		.join( "\n\n" );
 
-	const header = createHeader( opts );
+	const header = createCodeHeader( {
+		...opts,
+		createdByPackage,
+		createdByUrl,
+	} );
 
 	return {
 		data:
@@ -147,6 +92,36 @@ export function convertCoreTypesToTypeScript(
 		convertedTypes,
 		notConvertedTypes: [ ],
 	};
+}
+
+export function convertSingleCoreTypeToTypeScriptAst(
+	node: NamedType,
+	opts: Pick< ToTsOptions, 'useUnknown' | 'declaration' > = { }
+)
+: ts.Declaration
+{
+	const {
+		useUnknown = false,
+		declaration = false,
+	} = opts;
+
+	const ctx: Context = {
+		useUnknown,
+	};
+
+	const { name } = node;
+
+	const ret = tsType( ctx, node );
+
+	const doExport = ( tsNode: ts.Declaration ) =>
+		wrapAnnotations( tsNode, node );
+
+	const typeDeclaration =
+		ret.type === 'flow-type'
+		? declareType( declaration, name, ret.node )
+		: declareInterface( declaration, name, ret.properties );
+
+	return doExport( typeDeclaration );
 }
 
 function createExportModifier( declaration: boolean )
