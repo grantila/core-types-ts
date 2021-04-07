@@ -141,7 +141,7 @@ export function createCodeHeader( {
 		const theFile = !filename ? 'This file' : `The file ${filename}`;
 		const source = !sourceFilename ? '' : ` from ${sourceFilename}`;
 		const onbehalf = userPackage ? ` on behalf of ${userPackage}` : '';
-		const link = userPackageUrl ? `\n - {@link ${userPackageUrl}}` : '';
+		const link = userPackageUrl ? ` - {@link ${userPackageUrl}}` : '';
 		return makeGenericComment( ( [
 			`${theFile} is generated${source} by ` +
 				`${createdByPackage}${onbehalf}, ` +

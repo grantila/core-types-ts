@@ -238,4 +238,39 @@ describe( "core-types-to-ts", ( ) =>
 
 		expect( ts ).toMatchSnapshot( );
 	} );
+
+	it( "should not add descriptive header", ( ) =>
+	{
+		const ts = convertCoreTypesToTypeScript(
+			wrapDocument( [
+				{
+					name: 'foo',
+					type: 'string',
+				}
+			] ),
+			{
+				noDescriptiveHeader: true
+			}
+		);
+
+		expect( ts.data ).toMatchSnapshot( );
+	} );
+
+	it( "should add user package", ( ) =>
+	{
+		const ts = convertCoreTypesToTypeScript(
+			wrapDocument( [
+				{
+					name: 'foo',
+					type: 'string',
+				}
+			] ),
+			{
+				userPackage: 'my-package',
+				userPackageUrl: 'https://my-user-package.com',
+			}
+		);
+
+		expect( ts.data ).toMatchSnapshot( );
+	} );
 } );
