@@ -18,6 +18,7 @@ This package provides conversion functions between [`core-types`][core-types-git
 Other conversion packages:
  * [`core-types-json-schema`][core-types-json-schema-github-url]
  * [`core-types-graphql`][core-types-graphql-github-url]
+ * [`core-types-suretype`][core-types-suretype-github-url] (which is also using this package)
 
 
 # Contents
@@ -129,3 +130,4 @@ interface FromTsOptions
 [core-types-github-url]: https://github.com/grantila/core-types
 [core-types-graphql-github-url]: https://github.com/grantila/core-types-graphql
 [core-types-json-schema-github-url]: https://github.com/grantila/core-types-json-schema
+[core-types-suretype-github-url]: https://github.com/grantila/core-types-suretype
