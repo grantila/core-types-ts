@@ -28,7 +28,9 @@ export function wrapAnnotations<T extends ts.Node>(
 ): T
 {
 	const comment =
-		stringifyAnnotations( node, { formatWhitespace: blockComment } );
+		stringifyAnnotations( node, { formatWhitespace: blockComment } )
+		.trim( );
+
 	if ( !comment )
 		return tsNode;
 
@@ -36,7 +38,12 @@ export function wrapAnnotations<T extends ts.Node>(
 		return ts.addSyntheticLeadingComment(
 			tsNode,
 			ts.SyntaxKind.MultiLineCommentTrivia,
-			comment,
+			comment.includes( "\n" )
+				// A multi-line comment need a last extra line
+				? `${comment}\n `
+				// A single-line comment need an initial star to make to two
+				// stars, and therefore a JSDoc comment.
+				: `* ${comment} `,
 			true
 		);
 
