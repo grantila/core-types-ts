@@ -97,9 +97,9 @@ export interface User {
     name: string;
 }
 
-/* A chat line*/
+/** A chat line */
 export interface ChatLine {
-    /* User ref*/
+    /** User ref */
     user: User;
     /**
      * @example
@@ -108,13 +108,13 @@ export interface ChatLine {
     line: string;
 }
 
-/* Thing ref*/
+/** Thing ref */
 export type Thingy = /**
  * Thing is the preferred type
  *
  * @see The Thing documentation
  */
-Thing | /* Just a number*/
+Thing | /** Just a number */
 number;
 ",
   "notConvertedTypes": Array [],
@@ -220,11 +220,11 @@ Object {
  * This type holds the user information, such as name
  */
 export interface User {
-    /* The real name*/
+    /** The real name */
     name: string;
 }
 
-/* A chat line*/
+/** A chat line */
 export interface ChatLine {
     user: User;
     line: string;
