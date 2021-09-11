@@ -30,6 +30,17 @@ function extractTitleDescription( text: string | undefined )
 	return { description: text };
 }
 
+function stringifyDoc(
+	text: undefined | string | ts.NodeArray< ts.JSDocComment >
+)
+: string | undefined
+{
+	if ( typeof text === 'undefined' || typeof text === 'string' )
+		return text;
+
+	return text.map( ( { text } ) => text ).join( ' ' );
+}
+
 function extractTags( tags: ReadonlyArray< ts.JSDocTag > ): CoreTypeAnnotations
 {
 	const descriptions: Array< string > = [ ];
@@ -39,7 +50,7 @@ function extractTags( tags: ReadonlyArray< ts.JSDocTag > ): CoreTypeAnnotations
 
 	const extractSee = ( tag: ts.JSDocSeeTag ) =>
 		( tag.name ? ( tag.name?.getText( ) + ' ' ) : '' ) +
-		tag.comment?.trim( ) ?? '';
+		stringifyDoc( tag.comment )?.trim( ) ?? '';
 
 	tags.forEach( tag =>
 	{
@@ -47,13 +58,16 @@ function extractTags( tags: ReadonlyArray< ts.JSDocTag > ): CoreTypeAnnotations
 			return;
 
 		if ( tag.tagName.text === 'example' )
-			examples.push( tag.comment.trim( ) );
+			examples.push( stringifyDoc( tag.comment )?.trim( ) ?? '' );
 		else if ( tag.tagName.text === 'default' )
-			_default.push( tag.comment.trim( ) );
+			_default.push( stringifyDoc( tag.comment )?.trim( ) ?? '' );
 		else if ( tag.tagName.text === 'see' )
 			see.push( extractSee( tag as ts.JSDocSeeTag ) );
 		else
-			descriptions.push( `@${tag.tagName.text} ${tag.comment.trim( )}` );
+		{
+			const text = stringifyDoc( tag.comment )?.trim( ) ?? '';
+			descriptions.push( `@${tag.tagName.text} ${text}` );
+		}
 	} )
 
 	return {
@@ -80,7 +94,7 @@ export function decorateNode( node: ts.Node ): CoreTypeAnnotations
 		const first = jsDoc[ 0 ];
 
 		return mergeAnnotations( [
-			extractTitleDescription( first.comment ),
+			extractTitleDescription( stringifyDoc( first.comment ) ),
 			extractTags( first.tags ?? [ ] ),
 		] );
 	}
