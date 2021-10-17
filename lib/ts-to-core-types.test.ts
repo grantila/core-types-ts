@@ -1,4 +1,4 @@
-import { NamedType } from 'core-types';
+import { NamedType, simplify } from 'core-types';
 import { convertTypeScriptToCoreTypes } from './ts-to-core-types'
 
 
@@ -63,6 +63,32 @@ it( "basic interface with additional properties", ( ) =>
 				},
 			},
 			additionalProperties: { type: 'number' },
+		}
+	] );
+} );
+
+it( "string unions", ( ) =>
+{
+	const coreTypes = convertTypeScriptToCoreTypes( `
+	export interface Foo {
+		foo: "bar" | "baz" | "bak";
+	}
+	` ).data.types;
+
+	equal( simplify( coreTypes ), [
+		{
+			name: 'Foo',
+			type: 'object',
+			properties: {
+				foo: {
+					required: true,
+					node: {
+						type: 'string',
+						enum: [ 'bar', 'baz', 'bak' ],
+					},
+				},
+			},
+			additionalProperties: false,
 		}
 	] );
 } );
