@@ -9,6 +9,7 @@
 		"target": "ES2019",
 		"module": "CommonJS",
 		"moduleResolution": "node",
+		"strictNullChecks": true,
 		"noImplicitAny": true,
 		"noUnusedLocals": true,
 		"pretty": true,

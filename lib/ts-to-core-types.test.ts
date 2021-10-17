@@ -67,6 +67,51 @@ it( "basic interface with additional properties", ( ) =>
 	] );
 } );
 
+it( "basic interface with additional properties", ( ) =>
+{
+	const coreTypes = convertTypeScriptToCoreTypes( `
+	export type Foo = {
+		bar: (string | boolean | {baz: 'bak'})[];
+	}
+	` ).data.types;
+
+	equal( simplify( coreTypes ), [
+		{
+			name: 'Foo',
+			type: 'object',
+			properties: {
+				bar: {
+					required: true,
+					node: {
+						type: 'array',
+						elementType: {
+							type: 'or',
+							or: [
+								{ type: 'string' },
+								{ type: 'boolean' },
+								{
+									type: 'object',
+									properties: {
+										'baz': {
+											node: {
+												type: 'string',
+												const: 'bak'
+											},
+											required: true,
+										},
+									},
+									additionalProperties: false,
+								},
+							],
+						},
+					},
+				},
+			},
+			additionalProperties: false,
+		}
+	] );
+} );
+
 it( "string unions", ( ) =>
 {
 	const coreTypes = convertTypeScriptToCoreTypes( `

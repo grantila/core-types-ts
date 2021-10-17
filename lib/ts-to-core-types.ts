@@ -309,6 +309,26 @@ function fromTsTypeNode( node: ts.TypeNode, ctx: Context )
 			...decorateNode( node ),
 		};
 
+	else if ( ts.isParenthesizedTypeNode( node ) )
+	{
+		const children = [ ...node.getChildren( ) ];
+		if ( children[ 0 ]?.kind === ts.SyntaxKind.OpenParenToken )
+			children.shift( );
+		if (
+			children[ children.length - 1 ]?.kind ===
+				ts.SyntaxKind.CloseParenToken
+		)
+			children.pop( );
+
+		if ( children.length !== 1 || !ts.isTypeNode( children[ 0 ] ) )
+			return ctx.handleError( ctx.getUnsupportedError(
+				`Parenthesis type not understood`,
+				node
+			) );
+
+		return fromTsTypeNode( children[ 0 ] as ts.TypeNode, ctx );
+	}
+
 	else if ( node.kind === ts.SyntaxKind.AnyKeyword )
 		return { type: 'any', ...decorateNode( node ) };
 
