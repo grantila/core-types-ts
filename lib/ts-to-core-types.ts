@@ -397,7 +397,7 @@ function fromTsTypeNode( node: ts.TypeNode, ctx: Context )
 			{
 				if ( ctx.cyclicState.has( ref ) )
 					throw new MalformedTypeError(
-						`Cycling type found when trying to inline type ${ref}`,
+						`Cyclic type found when trying to inline type ${ref}`,
 						{
 							blob: node,
 							loc: toLocation( node ),

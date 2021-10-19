@@ -34,7 +34,7 @@
     "json"
   ],
   "dependencies": {
-    "core-types": "^1.9.1",
+    "core-types": "^1.10.0",
     "typescript": "^4.4.3"
   },
   "devDependencies": {

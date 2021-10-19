@@ -18,15 +18,23 @@ it( "object literal type", ( ) =>
 	equal( coreTypes, [
 		{
 			name: 'Foo',
+			title: 'Foo',
 			type: 'object',
 			properties: {
-				foo: { required: true, node: { type: 'string' } },
+				foo: {
+					required: true,
+					node: { type: 'string', title: 'Foo.foo' },
+				},
 				bar: {
 					required: true,
 					node: {
 						type: 'object',
+						title: 'Foo.bar',
 						properties: {
-							baz: { node: { type: 'number' }, required: true }
+							baz: {
+								node: { type: 'number', title: 'Foo.bar.baz' },
+								required: true,
+							}
 						},
 						additionalProperties: false,
 					},
@@ -49,15 +57,17 @@ it( "basic interface with additional properties", ( ) =>
 	equal( coreTypes, [
 		{
 			name: 'Foo',
+			title: 'Foo',
 			type: 'object',
 			properties: {
 				foo: {
 					required: true,
 					node: {
 						type: 'or',
+						title: 'Foo.foo',
 						or: [
-							{ type: 'string' },
-							{ type: 'boolean' },
+							{ type: 'string', title: 'Foo.foo' },
+							{ type: 'boolean', title: 'Foo.foo' },
 						],
 					},
 				},
@@ -67,7 +77,7 @@ it( "basic interface with additional properties", ( ) =>
 	] );
 } );
 
-it( "basic interface with additional properties", ( ) =>
+it( "basic interface with parenthesized properties", ( ) =>
 {
 	const coreTypes = convertTypeScriptToCoreTypes( `
 	export type Foo = {
@@ -78,23 +88,28 @@ it( "basic interface with additional properties", ( ) =>
 	equal( simplify( coreTypes ), [
 		{
 			name: 'Foo',
+			title: 'Foo',
 			type: 'object',
 			properties: {
 				bar: {
 					required: true,
 					node: {
 						type: 'array',
+						title: 'Foo.bar',
 						elementType: {
 							type: 'or',
+							title: 'Foo.bar.[]',
 							or: [
-								{ type: 'string' },
-								{ type: 'boolean' },
+								{ type: 'string', title: 'Foo.bar.[]' },
+								{ type: 'boolean', title: 'Foo.bar.[]' },
 								{
 									type: 'object',
+									title: 'Foo.bar.[]',
 									properties: {
 										'baz': {
 											node: {
 												type: 'string',
+												title: 'Foo.bar.[].baz',
 												const: 'bak'
 											},
 											required: true,
@@ -123,12 +138,14 @@ it( "string unions", ( ) =>
 	equal( simplify( coreTypes ), [
 		{
 			name: 'Foo',
+			title: 'Foo',
 			type: 'object',
 			properties: {
 				foo: {
 					required: true,
 					node: {
 						type: 'string',
+						title: 'Foo.foo',
 						enum: [ 'bar', 'baz', 'bak' ],
 					},
 				},
@@ -176,12 +193,14 @@ it( "implicit non-exported interface with all types", ( ) =>
 	equal( coreTypes, [
 		{
 			name: 'Foo',
+			title: 'Foo',
 			type: 'object',
 			properties: {
 				and: {
 					required: true,
 					node: {
 						type: 'and',
+						title: 'Foo.and',
 						and: [
 							{ type: 'string' },
 							{ type: 'number' },
@@ -192,9 +211,10 @@ it( "implicit non-exported interface with all types", ( ) =>
 					required: true,
 					node: {
 						type: 'or',
+						title: 'Foo.or',
 						or: [
-							{ type: 'boolean' },
-							{ type: 'string', const: 'foobar' },
+							{ type: 'boolean', title: 'Foo.or' },
+							{ type: 'string', title: 'Foo.or', const: 'foobar' },
 						],
 					},
 				},
@@ -202,6 +222,7 @@ it( "implicit non-exported interface with all types", ( ) =>
 					required: true,
 					node: {
 						type: 'ref',
+						title: 'Foo.ref',
 						ref: 'User',
 					},
 				},
@@ -209,42 +230,49 @@ it( "implicit non-exported interface with all types", ( ) =>
 					required: true,
 					node: {
 						type: 'any',
+						title: 'Foo.any',
 					},
 				},
 				unknown: {
 					required: true,
 					node: {
 						type: 'any',
+						title: 'Foo.unknown',
 					},
 				},
 				null: {
 					required: true,
 					node: {
 						type: 'null',
+						title: 'Foo.null',
 					},
 				},
 				string: {
 					required: true,
 					node: {
 						type: 'string',
+						title: 'Foo.string',
 					},
 				},
 				number: {
 					required: true,
 					node: {
 						type: 'number',
+						title: 'Foo.number',
 					},
 				},
 				boolean: {
 					required: true,
 					node: {
 						type: 'boolean',
+						title: 'Foo.boolean',
 					},
 				},
 				object: {
 					required: true,
 					node: {
 						type: 'object',
+						title: 'Foo.object',
 						properties: { },
 						additionalProperties: true,
 					},
@@ -253,6 +281,7 @@ it( "implicit non-exported interface with all types", ( ) =>
 					required: true,
 					node: {
 						type: 'array',
+						title: 'Foo.arrayAlone',
 						elementType: { type: 'any' },
 					},
 				},
@@ -260,26 +289,35 @@ it( "implicit non-exported interface with all types", ( ) =>
 					required: true,
 					node: {
 						type: 'array',
+						title: 'Foo.arrayOfAny',
 						elementType: { type: 'any' }
-					}
+					},
 				},
 				arrayOfNumber: {
 					required: true,
 					node: {
 						type: 'array',
-						elementType: { type: 'number' }
-					}
+						title: 'Foo.arrayOfNumber',
+						elementType: {
+							type: 'number',
+							title: 'Foo.arrayOfNumber.[]',
+						},
+					},
 				},
 				tuple: {
 					required: true,
 					node: {
 						type: 'tuple',
+						title: 'Foo.tuple',
 						elementTypes: [
-							{ type: 'string' },
-							{ type: 'number' },
+							{ type: 'string', title: 'Foo.tuple.0' },
+							{ type: 'number', title: 'Foo.tuple.1' },
 						],
-						additionalItems: { type: 'boolean' },
-						minItems: 2
+						additionalItems: {
+							type: 'boolean',
+							title: 'Foo.tuple.2',
+						},
+						minItems: 2,
 					},
 				},
 			},
@@ -287,23 +325,39 @@ it( "implicit non-exported interface with all types", ( ) =>
 		},
 		{
 			name: 'stringOrFiveOrFalseOrNull',
+			title: 'stringOrFiveOrFalseOrNull',
 			type: 'or',
 			or: [
-				{ type: 'string' },
-				{ type: 'number', const: 5 },
-				{ type: 'boolean', const: false },
-				{ type: 'null' },
+				{ type: 'string', title: 'stringOrFiveOrFalseOrNull' },
+				{
+					type: 'number',
+					title: 'stringOrFiveOrFalseOrNull',
+					const: 5
+				},
+				{
+					type: 'boolean',
+					title: 'stringOrFiveOrFalseOrNull',
+					const: false,
+				},
+				{ type: 'null', title: 'stringOrFiveOrFalseOrNull' },
 			],
 		},
 		{
 			name: "User",
-			title: "This is a good type",
+			title: "User",
+			description: "This is a good type",
 			examples: "{ foo: 'bar' }",
 			default: "string",
 			type: "object",
 			properties: {
-				name: { node: { type: "string", }, required: true, },
-				signupAt: { node: { type: "number", }, required: true, },
+				name: {
+					node: { type: "string", title: 'User.name' },
+					required: true,
+				},
+				signupAt: {
+					node: { type: "number", title: 'User.signupAt' },
+					required: true,
+				},
 			},
 			additionalProperties: false,
 		},
@@ -321,10 +375,11 @@ describe( "optional tuple arguments", ( ) =>
 		equal( coreTypes, [
 			{
 				name: 'T',
+				title: 'T',
 				type: 'tuple',
 				elementTypes: [
-					{ type: 'string' },
-					{ type: 'number' },
+					{ type: 'string', title: 'T.0' },
+					{ type: 'number', title: 'T.1' },
 				],
 				minItems: 0,
 				additionalItems: false,
@@ -341,10 +396,11 @@ describe( "optional tuple arguments", ( ) =>
 		equal( coreTypes, [
 			{
 				name: 'T',
+				title: 'T',
 				type: 'tuple',
 				elementTypes: [
-					{ type: 'string' },
-					{ type: 'number' },
+					{ type: 'string', title: 'T.0' },
+					{ type: 'number', title: 'T.1' },
 				],
 				minItems: 1,
 				additionalItems: false,
@@ -361,10 +417,11 @@ describe( "optional tuple arguments", ( ) =>
 		equal( coreTypes, [
 			{
 				name: 'T',
+				title: 'T',
 				type: 'tuple',
 				elementTypes: [
-					{ type: 'string' },
-					{ type: 'number' },
+					{ type: 'string', title: 'T.0' },
+					{ type: 'number', title: 'T.1' },
 				],
 				minItems: 2,
 				additionalItems: false,
@@ -392,9 +449,13 @@ describe( "non-exported types", ( ) =>
 		equal( coreTypes, [
 			{
 				name: 'T2',
+				title: 'T2',
 				type: 'object',
 				properties: {
-					prop: { node: { type: 'ref', ref: 'T' }, required: true },
+					prop: {
+						node: { type: 'ref', ref: 'T', title: 'T2.prop' },
+						required: true,
+					},
 				},
 				additionalProperties: false,
 			}
@@ -418,14 +479,22 @@ describe( "non-exported types", ( ) =>
 		equal( coreTypes, [
 			{
 				name: 'T',
+				title: 'T',
 				type: 'or',
-				or: [ { type: 'string' }, { type: 'number' } ],
+				or: [
+					{ type: 'string', title: 'T' },
+					{ type: 'number', title: 'T' },
+				],
 			},
 			{
 				name: 'T2',
+				title: 'T2',
 				type: 'object',
 				properties: {
-					prop: { node: { type: 'boolean' }, required: true },
+					prop: {
+						node: { type: 'boolean', title: 'T2.prop' },
+						required: true,
+					},
 				},
 				additionalProperties: false,
 			}
@@ -449,13 +518,18 @@ describe( "non-exported types", ( ) =>
 		equal( coreTypes, [
 			{
 				name: 'T2',
+				title: 'T2',
 				type: 'object',
 				properties: {
 					prop: {
 						node: {
 							name: 'T',
+							title: 'T2.prop',
 							type: 'or',
-							or: [ { type: 'string' }, { type: 'number' } ],
+							or: [
+								{ type: 'string', title: 'T' },
+								{ type: 'number', title: 'T' },
+							],
 						},
 						required: true,
 					},
@@ -480,7 +554,7 @@ describe( "non-exported types", ( ) =>
 			}
 		).data.types;
 
-		expect( convert ).toThrowError( /Cycling type found/ );
+		expect( convert ).toThrowError( /Cyclic type found/ );
 	} );
 
 	it( "include-if-referenced", ( ) =>
@@ -501,16 +575,24 @@ describe( "non-exported types", ( ) =>
 		equal( coreTypes, [
 			{
 				name: 'T2',
+				title: 'T2',
 				type: 'object',
 				properties: {
-					prop: { node: { type: 'ref', ref: 'T' }, required: true },
+					prop: {
+						node: { type: 'ref', ref: 'T', title: 'T2.prop' },
+						required: true,
+					},
 				},
 				additionalProperties: false,
 			},
 			{
 				name: 'T',
+				title: 'T',
 				type: 'or',
-				or: [ { type: 'string' }, { type: 'number' } ],
+				or: [
+					{ type: 'string', title: 'T' },
+					{ type: 'number', title: 'T' },
+				],
 			},
 		] );
 	} );
@@ -545,6 +627,18 @@ describe( "comments", ( ) =>
 			 * bar can be any baz
 			 */
 			bar: { baz: number; };
+			arr: {
+				/** Array item object prop */
+				arrItem: number;
+			}[];
+			tup: [
+				string,
+				number,
+				{
+					/** Tuple item object prop */
+					tupItem: number;
+				}
+			];
 		}
 		` ).data.types;
 
@@ -552,28 +646,95 @@ describe( "comments", ( ) =>
 			{
 				name: 'Id',
 				type: 'or',
-				or: [ { type: 'string' }, { type: 'number' } ],
-				title: 'Any kind of ID',
-				description: 'This can be either a number or a string',
+				or: [
+					{ type: 'string', title: 'Id' },
+					{ type: 'number', title: 'Id' },
+				],
+				title: 'Id',
+				description: 'Any kind of ID\n\n' +
+					'This can be either a number or a string',
 				examples: [ '4711', '"some-uuid-goes-here"' ],
 				see: 'other Id implementations',
 				default: '0',
 			},
 			{
 				name: 'Foo',
-				title: 'This is a good Foo type',
+				title: 'Foo',
+				description: 'This is a good Foo type',
 				type: 'object',
 				properties: {
-					foo: { required: true, node: { type: 'string' } },
+					foo: {
+						required: true,
+						node: { type: 'string', title: 'Foo.foo' },
+					},
 					bar: {
 						required: true,
 						node: {
 							type: 'object',
-							title: 'bar can be any baz',
+							title: 'Foo.bar',
+							description: 'bar can be any baz',
 							properties: {
-								baz: { node: { type: 'number' }, required: true }
+								baz: {
+									node: {
+										type: 'number',
+										title: 'Foo.bar.baz',
+									},
+									required: true,
+								},
 							},
 							additionalProperties: false,
+						},
+					},
+					arr: {
+						required: true,
+						node: {
+							type: 'array',
+							title: 'Foo.arr',
+							elementType: {
+								type: 'object',
+								title: 'Foo.arr.[]',
+								properties: {
+									arrItem: {
+										required: true,
+										node: {
+											type: 'number',
+											title: 'Foo.arr.[].arrItem',
+											description:
+												'Array item object prop',
+										},
+									},
+								},
+								additionalProperties: false,
+							},
+						},
+					},
+					tup: {
+						required: true,
+						node: {
+							type: 'tuple',
+							title: 'Foo.tup',
+							elementTypes: [
+								{ type: 'string', title: 'Foo.tup.0' },
+								{ type: 'number', title: 'Foo.tup.1' },
+								{
+									type: 'object',
+									title: 'Foo.tup.2',
+									properties: {
+										tupItem: {
+											required: true,
+											node: {
+												type: 'number',
+												title: 'Foo.tup.2.tupItem',
+												description:
+													'Tuple item object prop',
+											},
+										},
+									},
+									additionalProperties: false,
+								},
+							],
+							minItems: 3,
+							additionalItems: false,
 						},
 					},
 				},
@@ -602,9 +763,13 @@ describe( "unsupported", ( ) =>
 		equal( coreTypes, [
 			{
 				name: 'Foo',
+				title: 'Foo',
 				type: 'object',
 				properties: {
-					foo: { required: true, node: { type: 'string' } },
+					foo: {
+						required: true,
+						node: { type: 'string', title: 'Foo.foo' },
+					},
 				},
 				additionalProperties: false,
 			}
@@ -633,14 +798,19 @@ describe( "generics", ( ) =>
 		equal( coreTypes, [
 			{
 				name: 'Foo',
+				title: 'Foo',
 				type: 'object',
 				properties: {
-					foo: { required: true, node: { type: 'string' } },
+					foo: {
+						required: true,
+						node: { type: 'string', title: 'Foo.foo' },
+					},
 				},
 				additionalProperties: false,
 			},
 			{
 				name: 'Bar',
+				title: 'Bar',
 				type: 'any',
 			}
 		] );
