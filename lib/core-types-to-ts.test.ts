@@ -141,13 +141,13 @@ describe( "core-types-to-ts", ( ) =>
 		const ts = convertCoreTypesToTypeScript( wrapDocument( [
 			{
 				name: 'User',
-				title: 'User type',
-				description:
+				title: 'User',
+				description: 'User type\n\n' +
 					'This type holds the user information, such as name',
 				type: 'object',
 				properties: {
 					name: {
-						node: { type: 'string', title: 'The real name' },
+						node: { type: 'string', description: 'The real name' },
 						required: true
 					},
 				},
@@ -155,7 +155,8 @@ describe( "core-types-to-ts", ( ) =>
 			},
 			{
 				name: 'ChatLine',
-				title: 'A chat line',
+				title: 'ChatLine',
+				description: 'A chat line',
 				type: 'object',
 				properties: {
 					user: {
@@ -175,8 +176,8 @@ describe( "core-types-to-ts", ( ) =>
 		const ts = convertCoreTypesToTypeScript( wrapDocument( [
 			{
 				name: 'User',
-				title: 'User type',
-				description:
+				title: 'User',
+				description: 'User type\n\n' +
 					'This type holds the user information, such as name',
 				examples: [ '{ name: "Joe" }' ],
 				default: '{ user: "" }',
@@ -186,8 +187,9 @@ describe( "core-types-to-ts", ( ) =>
 					name: {
 						node: {
 							type: 'string',
-							title: 'The real name',
-							description: 'Must be a valid name, not */'
+							title: 'User.name',
+							description: 'The real name\n\n' +
+								'Must be a valid name, not */'
 						},
 						required: true
 					},
@@ -196,12 +198,14 @@ describe( "core-types-to-ts", ( ) =>
 			},
 			{
 				name: 'ChatLine',
-				title: 'A chat line',
+				title: 'CharLine',
+				description: 'A chat line',
 				type: 'object',
 				properties: {
 					user: {
 						node: {
-							title: 'User ref',
+							title: 'User.user',
+							description: 'User ref',
 							type: 'ref',
 							ref: 'User'
 						},
@@ -218,19 +222,21 @@ describe( "core-types-to-ts", ( ) =>
 				additionalProperties: false,
 			},
 			{
-				title: 'Thing ref',
 				name: 'Thingy',
+				title: 'Thingy',
+				description: 'Thing ref',
 				type: 'or',
 				or: [
 					{
 						type: 'ref',
 						ref: 'Thing',
-						title: 'Thing is the preferred type',
+						title: 'Thingy',
+						description: 'Thing is the preferred type',
 						see: 'The Thing documentation',
 					},
 					{
 						type: 'number',
-						title: 'Just a number',
+						description: 'Just a number',
 					},
 				],
 			},
