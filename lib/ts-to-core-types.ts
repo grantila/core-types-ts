@@ -84,6 +84,8 @@ export function convertTypeScriptToCoreTypes(
 			ts.isTypeAliasDeclaration( statement )
 			||
 			ts.isInterfaceDeclaration( statement )
+			||
+			ts.isEnumDeclaration( statement )
 		);
 
 	const ctx: Context = {
@@ -228,6 +230,16 @@ function fromTsTopLevelNode( node: TopLevelDeclaration, ctx: Context )
 			...decorateNode( node ),
 		};
 	}
+	else if ( ts.isEnumDeclaration( node ) )
+	{
+		return {
+			name: (node as ts.EnumDeclaration ).name.escapedText as string,
+			type: 'string',
+			title: (node as ts.EnumDeclaration ).name.escapedText as string,
+			enum: fromTsEnumMember( node, ctx ),
+			...decorateNode( node ),
+		};
+	}
 	else
 		throw new Error( "Internal error" );
 }
@@ -235,6 +247,29 @@ function fromTsTopLevelNode( node: TopLevelDeclaration, ctx: Context )
 function isOptionalProperty( node: ts.PropertySignature )
 {
 	return node.questionToken?.kind === ts.SyntaxKind.QuestionToken;
+}
+
+function fromTsEnumMember(
+	node: ts.EnumDeclaration | ts.TypeLiteralNode,
+	ctx: Context
+): Array<string> {
+	const _enum: Array<string> = [];
+	node.members.forEach((member)=>{
+		if(ts.isEnumMember(member)){
+			if(member.initializer){
+				if(ts.isStringLiteral(member.initializer)){
+					_enum.push(member.initializer.text)
+				}
+				else {
+					_enum.push(member.initializer.getText())
+				}
+				return;
+			}
+			_enum.push(member.name.getText());
+		}
+	})
+
+	return _enum
 }
 
 function fromTsObjectMembers(

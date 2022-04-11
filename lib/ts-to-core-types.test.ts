@@ -742,7 +742,53 @@ describe( "comments", ( ) =>
 			}
 		] );
 	} );
-} );
+	it( "should convert enum type", ( ) =>
+	{
+		const warn = jest.fn( );
+		const coreTypes = convertTypeScriptToCoreTypes(
+			`
+				export enum Foo {
+					BAR
+				};
+			`,
+			{ warn }
+		).data.types;
+
+		// console.log(coreTypes)
+
+		equal( coreTypes, [
+			{
+				name: 'Foo',
+				title: 'Foo',
+				type: 'string',
+				enum: [ "BAR" ]
+			}
+		] );
+	})
+	it( "should convert string enum type", ( ) =>
+	{
+		const warn = jest.fn( );
+		const coreTypes = convertTypeScriptToCoreTypes(
+			`
+				export enum Foo {
+					Bar = 'BAR'
+				};
+			`,
+			{ warn }
+		).data.types;
+
+		// console.log(coreTypes)
+
+		equal( coreTypes, [
+			{
+				name: 'Foo',
+				title: 'Foo',
+				type: 'string',
+				enum: [ "BAR" ]
+			}
+		] );
+	})
+});
 
 
 describe( "unsupported", ( ) =>
