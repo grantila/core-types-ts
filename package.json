@@ -35,7 +35,7 @@
   ],
   "dependencies": {
     "core-types": "^1.10.0",
-    "typescript": "^4.4.3"
+    "typescript": "^4.7.4"
   },
   "devDependencies": {
     "@types/jest": "^28.1.2",
