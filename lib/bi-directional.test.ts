@@ -39,4 +39,18 @@ describe( "bi-directional conversion", ( ) =>
 
 		expect( epi ).toEqual( ts );
 	} );
+
+	it( "should forward -1 back and forth", ( ) =>
+	{
+		const ct = convertTypeScriptToCoreTypes(
+			`export type Num = 1000 | -1;`
+		);
+
+		const ts = convertCoreTypesToTypeScript(
+			ct.data,
+			{ noDescriptiveHeader: true, noDisableLintHeader: true }
+		);
+
+		expect( ts.data ).toMatchSnapshot( );
+	} );
 } );

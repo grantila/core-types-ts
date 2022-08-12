@@ -45,6 +45,22 @@ it( "object literal type", ( ) =>
 	] );
 } );
 
+it( "negative numeric literal type", ( ) =>
+{
+	const coreTypes = convertTypeScriptToCoreTypes( `
+	export type Foo = -1;
+	` ).data.types;
+
+	equal( coreTypes, [
+		{
+			name: 'Foo',
+			title: 'Foo',
+			type: 'number',
+			const: -1,
+		}
+	] );
+} );
+
 it( "basic interface with additional properties", ( ) =>
 {
 	const coreTypes = convertTypeScriptToCoreTypes( `

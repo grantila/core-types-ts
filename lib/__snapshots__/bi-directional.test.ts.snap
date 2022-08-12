@@ -1,0 +1,6 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`bi-directional conversion should forward -1 back and forth 1`] = `
+"export type Num = 1000 | -1;
+"
+`;
