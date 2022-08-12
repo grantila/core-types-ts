@@ -451,11 +451,19 @@ function fromTsTypeNode( node: ts.TypeNode, ctx: Context )
 		else if ( node.literal.kind === ts.SyntaxKind.NullKeyword )
 			return { type: 'null', ...decorateNode( node ) };
 
-		else if ( node.literal.kind === ts.SyntaxKind.PrefixUnaryExpression )
+		else if ( node.literal.kind === ts.SyntaxKind.PrefixUnaryExpression ) {
+      if ( "operand" in node.literal && node.literal.operator === ts.SyntaxKind.MinusToken ) {
+        return {
+          type: 'number',
+          const: -Number( node.literal.operand.getText() ),
+          ...decorateNode( node )
+        }
+      }
 			return ctx.handleError( ctx.getUnsupportedError(
-				"Prefix unary expressions not supported",
+				"Prefix unary expressions is only supported for MinusToken",
 				node.literal
 			) );
+    }
 
 		return ctx.handleError( ctx.getUnsupportedError(
 			"Literal type not understood",
