@@ -761,6 +761,275 @@ describe( "comments", ( ) =>
 } );
 
 
+describe( "namespaces", ( ) =>
+{
+	it( "interface within namespace, use dot", ( ) =>
+	{
+		const coreTypes = convertTypeScriptToCoreTypes(
+			`
+				namespace Zap {
+					export interface Foo {
+						foo: string;
+						bar: { baz: number; };
+					}
+				}
+			`,
+			{ namespaces: 'join-dot' }
+		).data.types;
+
+		equal( coreTypes, [
+			{
+				name: 'Zap.Foo',
+				title: 'Zap.Foo',
+				type: 'object',
+				properties: {
+					foo: {
+						required: true,
+						node: { type: 'string', title: 'Zap.Foo.foo' },
+					},
+					bar: {
+						required: true,
+						node: {
+							type: 'object',
+							title: 'Zap.Foo.bar',
+							properties: {
+								baz: {
+									node: {
+										type: 'number',
+										title: 'Zap.Foo.bar.baz',
+									},
+									required: true,
+								}
+							},
+							additionalProperties: false,
+						},
+					},
+				},
+				additionalProperties: false,
+			}
+		] );
+	} );
+
+	it( "interface within multiple namespace, use dot", ( ) =>
+	{
+		const coreTypes = convertTypeScriptToCoreTypes(
+			`
+				namespace Zap {
+					namespace Zip {
+						export interface Foo {
+							foo: string;
+							bar: { baz: number; };
+						}
+					}
+				}
+			`,
+			{ namespaces: 'join-dot' }
+		).data.types;
+
+		equal( coreTypes, [
+			{
+				name: 'Zap.Zip.Foo',
+				title: 'Zap.Zip.Foo',
+				type: 'object',
+				properties: {
+					foo: {
+						required: true,
+						node: { type: 'string', title: 'Zap.Zip.Foo.foo' },
+					},
+					bar: {
+						required: true,
+						node: {
+							type: 'object',
+							title: 'Zap.Zip.Foo.bar',
+							properties: {
+								baz: {
+									node: {
+										type: 'number',
+										title: 'Zap.Zip.Foo.bar.baz',
+									},
+									required: true,
+								}
+							},
+							additionalProperties: false,
+						},
+					},
+				},
+				additionalProperties: false,
+			}
+		] );
+	} );
+
+	it( "interface within multiple namespace, use underscore", ( ) =>
+	{
+		const coreTypes = convertTypeScriptToCoreTypes(
+			`
+				namespace Zap {
+					namespace Zip {
+						export interface Foo {
+							foo: string;
+							bar: { baz: number; };
+						}
+					}
+				}
+			`,
+			{ namespaces: 'join-underscore' }
+		).data.types;
+
+		equal( coreTypes, [
+			{
+				name: 'Zap_Zip_Foo',
+				title: 'Zap_Zip_Foo',
+				type: 'object',
+				properties: {
+					foo: {
+						required: true,
+						node: { type: 'string', title: 'Zap_Zip_Foo.foo' },
+					},
+					bar: {
+						required: true,
+						node: {
+							type: 'object',
+							title: 'Zap_Zip_Foo.bar',
+							properties: {
+								baz: {
+									node: {
+										type: 'number',
+										title: 'Zap_Zip_Foo.bar.baz',
+									},
+									required: true,
+								}
+							},
+							additionalProperties: false,
+						},
+					},
+				},
+				additionalProperties: false,
+			}
+		] );
+	} );
+
+	it( "interface within multiple namespace, use hoist", ( ) =>
+	{
+		const coreTypes = convertTypeScriptToCoreTypes(
+			`
+				namespace Zap {
+					namespace Zip {
+						export interface Foo {
+							foo: string;
+							bar: { baz: number; };
+						}
+					}
+				}
+			`,
+			{ namespaces: 'hoist' }
+		).data.types;
+
+		equal( coreTypes, [
+			{
+				name: 'Foo',
+				title: 'Foo',
+				type: 'object',
+				properties: {
+					foo: {
+						required: true,
+						node: { type: 'string', title: 'Foo.foo' },
+					},
+					bar: {
+						required: true,
+						node: {
+							type: 'object',
+							title: 'Foo.bar',
+							properties: {
+								baz: {
+									node: {
+										type: 'number',
+										title: 'Foo.bar.baz',
+									},
+									required: true,
+								}
+							},
+							additionalProperties: false,
+						},
+					},
+				},
+				additionalProperties: false,
+			}
+		] );
+	} );
+
+	it( "interface within multiple namespace, use hoist conflict", ( ) =>
+	{
+		// Should pick top-level Foo
+		const coreTypes = convertTypeScriptToCoreTypes(
+			`
+				namespace Zap {
+					namespace Zip {
+						export interface Foo {
+							foo: string;
+							bar: { baz: number; };
+						}
+					}
+				}
+				export interface Foo {
+					baz: number;
+				}
+			`,
+			{ namespaces: 'hoist' }
+		).data.types;
+
+		equal( coreTypes, [
+			{
+				name: 'Foo',
+				title: 'Foo',
+				type: 'object',
+				properties: {
+					baz: {
+						required: true,
+						node: { type: 'number', title: 'Foo.baz' },
+					},
+				},
+				additionalProperties: false,
+			}
+		] );
+	} );
+
+	it( "interface within multiple namespace, ignore", ( ) =>
+	{
+		const coreTypes = convertTypeScriptToCoreTypes(
+			`
+				export interface Bar {
+					foo: number;
+				}
+				namespace Zap {
+					namespace Zip {
+						export interface Foo {
+							foo: string;
+							bar: { baz: number; };
+						}
+					}
+				}
+			`,
+			{ } // Ignore is default
+		).data.types;
+
+		equal( coreTypes, [
+			{
+				name: 'Bar',
+				title: 'Bar',
+				type: 'object',
+				properties: {
+					foo: {
+						required: true,
+						node: { type: 'number', title: 'Bar.foo' },
+					},
+				},
+				additionalProperties: false,
+			}
+		] );
+	} );
+} );
+
+
 describe( "unsupported", ( ) =>
 {
 	it( "should warn on non-string index", ( ) =>

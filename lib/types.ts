@@ -62,6 +62,24 @@ export interface FromTsOptions
 	warn?: WarnFunction;
 
 	/**
+	 * How to deal with namespaces:
+	 *
+	 *  - `ignore`: Ignore namespaces entirely (default)
+	 *  - `hoist`: Hoist types inside namespaces to top-level, so that the
+	 *    types are included, but without their namespace. This can cause
+	 *    conflicts, in which case deeper declarations will be dropped in favor
+	 *    of more top-level declarations. Same-level will be exported
+	 *    non-deterministically.
+	 *  - `join-dot`: Join namespaces and types with a dot (.)
+	 *  - `join-underscore`: Join namespaces and types with an underscore (_)
+	 */
+	namespaces?:
+		| 'ignore'
+		| 'hoist'
+		| 'join-dot'
+		| 'join-underscore';
+
+	/**
 	 * What to do when detecting a non-exported type:
 	 *
 	 *  - `fail`: Fail conversion with an Error

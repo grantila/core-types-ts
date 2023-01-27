@@ -28,8 +28,7 @@ const anyType: AnyType = { type: 'any' };
 
 type TopLevelDeclaration = ts.TypeAliasDeclaration | ts.InterfaceDeclaration;
 
-interface TopLevelEntry
-{
+interface TopLevelEntry {
 	declaration: TopLevelDeclaration;
 	exported: boolean;
 }
@@ -67,6 +66,7 @@ export function convertTypeScriptToCoreTypes(
 {
 	const {
 		warn = defaultWarn( sourceCode ),
+		namespaces = 'ignore',
 		nonExported = 'include-if-referenced',
 		unsupported = 'ignore',
 	} = options ?? { };
@@ -78,17 +78,127 @@ export function convertTypeScriptToCoreTypes(
 		/*setParentNodes */ true
 	);
 
-	const declarations = sourceFile.statements
-		.filter(
-			( statement ) : statement is TopLevelDeclaration =>
+	const isTopLevelDeclaration =
+		( statement: ts.Statement ): statement is TopLevelDeclaration =>
 			ts.isTypeAliasDeclaration( statement )
 			||
-			ts.isInterfaceDeclaration( statement )
+			ts.isInterfaceDeclaration( statement );
+
+	interface ExportedDeclaration {
+		namespaceParents: Array< string >;
+		declaration: TopLevelDeclaration;
+	}
+
+	const recurseNamespaces = (
+			namespaceParents: Array< string >,
+			statements: ts.NodeArray<ts.Statement>
+		): Array< ExportedDeclaration > =>
+		[
+			...statements
+				.filter(
+					( statement ): statement is ts.NamespaceDeclaration =>
+						ts.isModuleDeclaration( statement )
+				)
+				.flatMap( statement =>
+					statement.body.kind !== ts.SyntaxKind.ModuleBlock
+					? [ ]
+					: recurseNamespaces(
+						[ ...namespaceParents, statement.name.getText( ) ],
+						statement.body.statements
+					)
+				),
+			...statements
+				.filter( isTopLevelDeclaration )
+				.map( ( statement ): ExportedDeclaration | undefined =>
+					{
+						if (
+							namespaceParents.length > 0 &&
+							namespaces === 'ignore'
+						)
+							return undefined;
+
+						return { namespaceParents, declaration: statement };
+					}
+				)
+				.filter( ( v ): v is NonNullable< typeof v > => !!v ),
+		];
+
+	const filterConflicts = ( declarations: Array< ExportedDeclaration > )
+		: Array< ExportedDeclaration > =>
+		{
+			const byName = new Map< string, ExportedDeclaration >( );
+
+			declarations.forEach( ( exportedDeclaration ) =>
+			{
+				const { declaration, namespaceParents } = exportedDeclaration;
+
+				const name = declaration.name.getText( );
+				const item = byName.get( name );
+
+				if ( !item )
+				{
+					byName.set( name, exportedDeclaration );
+					return;
+				}
+
+				if ( item.namespaceParents.length > namespaceParents.length )
+				{
+					// Replace with higher-level declaration
+					byName.set( name, exportedDeclaration );
+				}
+			} );
+
+			return [ ...byName.values( ) ];
+		};
+
+	// Given the <namespaces> configuration, set an appropriate name for the
+	// exported type.
+	const renameDeclaration =
+		( { declaration, namespaceParents }: ExportedDeclaration )
+			: TopLevelDeclaration =>
+		{
+			const name = declaration.name.getText( );
+
+			const fullName =
+				namespaces === 'hoist' || namespaces === 'ignore'
+				? name
+				: [ ...namespaceParents, name ]
+					.join(
+						namespaces === 'join-dot' ? '.' : '_'
+					);
+
+			const identifier = ts.factory.createIdentifier( fullName );
+			identifier.getText = _ => fullName;
+
+			type MutableTopLevelDeclaration = {
+				-readonly [ K in keyof TopLevelDeclaration ]:
+					TopLevelDeclaration[ K ];
+			}
+
+			( declaration as MutableTopLevelDeclaration ).name = identifier;
+
+			return declaration;
+		};
+
+	const flattenAndFilterConflicts =
+		( declarations: Array< ExportedDeclaration > )
+			: Array< TopLevelDeclaration > =>
+		(
+			namespaces === 'hoist'
+				? filterConflicts( declarations )
+				: declarations
+		)
+		.map( renameDeclaration );
+
+	const declarations =
+		flattenAndFilterConflicts(
+			recurseNamespaces( [ ], sourceFile.statements )
 		);
 
 	const ctx: Context = {
 		options: {
 			warn,
+			namespaces,
 			nonExported,
 			unsupported,
 		},
