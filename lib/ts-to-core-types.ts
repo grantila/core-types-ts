@@ -27,11 +27,19 @@ import { decorateNode } from './ts-annotations'
 const anyType: AnyType = { type: 'any' };
 
 type TopLevelDeclaration = ts.TypeAliasDeclaration | ts.InterfaceDeclaration;
+type MutableTopLevelDeclaration = {
+	-readonly [K in keyof TopLevelDeclaration]: TopLevelDeclaration[K]
+}
 
-interface TopLevelEntry
-{
-	declaration: TopLevelDeclaration;
+
+interface TopLevelEntry {
+	declaration: MutableTopLevelDeclaration;
 	exported: boolean;
+}
+
+interface NamespacedTopLevel extends ts.NamespaceDeclaration {
+	name: ts.Identifier;
+	body: ts.ModuleBlock;
 }
 
 interface Context
@@ -78,13 +86,46 @@ export function convertTypeScriptToCoreTypes(
 		/*setParentNodes */ true
 	);
 
-	const declarations = sourceFile.statements
+	const toplevel_declarations = sourceFile.statements
 		.filter(
-			( statement ) : statement is TopLevelDeclaration =>
-			ts.isTypeAliasDeclaration( statement )
-			||
-			ts.isInterfaceDeclaration( statement )
-		);
+			(statement): statement is TopLevelDeclaration => {
+				return ts.isTypeAliasDeclaration(statement) ||
+					ts.isInterfaceDeclaration(statement);
+			}
+		).map(statement => statement as MutableTopLevelDeclaration);
+
+	// Flatten out namespace declarations, prepend namespace to interface names like "Namespace.Interface"
+	const module_declarations = sourceFile.statements
+		.filter(
+			(statement): statement is ts.NamespaceDeclaration => {
+				return ts.isModuleDeclaration(statement);
+			})
+		.map(statement => statement as NamespacedTopLevel)
+		.flatMap(namespace_declaration => {
+
+			const namespace = namespace_declaration.name.getText()
+
+			let body_statements = namespace_declaration.body.statements.filter(
+				(statement): statement is TopLevelDeclaration => {
+					return ts.isTypeAliasDeclaration(statement) ||
+						ts.isInterfaceDeclaration(statement);
+				}
+			).map(body_statement => body_statement as MutableTopLevelDeclaration)
+
+			return body_statements.map(statement => {
+				const name = namespace + "." + statement.name.getText()
+
+				let identifier: ts.Identifier = ts.factory.createIdentifier(name)
+				identifier.getText = (_) => name
+
+				statement.name = identifier
+
+				return statement
+			})
+		})
+
+
+	const declarations = toplevel_declarations.concat(module_declarations)
 
 	const ctx: Context = {
 		options: {
@@ -149,7 +190,7 @@ export function convertTypeScriptToCoreTypes(
 
 	const notConvertedTypes = new Set< string >( );
 
-	const convertTopLevel = ( statement: TopLevelDeclaration ) =>
+	const convertTopLevel = ( statement: MutableTopLevelDeclaration ) => 
 	{
 		ctx.cyclicState = new Set( );
 		const type = fromTsTopLevelNode( statement, ctx );
@@ -205,7 +246,7 @@ function handleGeneric( node: ts.Node, ctx: Context )
 	) );
 }
 
-function fromTsTopLevelNode( node: TopLevelDeclaration, ctx: Context )
+function fromTsTopLevelNode( node: MutableTopLevelDeclaration, ctx: Context )
 : NamedType | undefined
 {
 	if ( isGenericType( node ) )

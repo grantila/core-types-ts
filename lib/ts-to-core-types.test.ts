@@ -744,6 +744,47 @@ describe( "comments", ( ) =>
 	} );
 } );
 
+it("interface within namespace", () => {
+
+	const coreTypes = convertTypeScriptToCoreTypes(`
+	export namespace Zap {
+		export interface Foo {
+			foo: string;
+			bar: { baz: number; };
+		}
+	}
+	`).data.types;
+
+	equal(coreTypes, [
+		{
+			name: 'Zap.Foo',
+			title: 'Zap.Foo',
+			type: 'object',
+			properties: {
+				foo: {
+					required: true,
+					node: { type: 'string', title: 'Zap.Foo.foo' },
+				},
+				bar: {
+					required: true,
+					node: {
+						type: 'object',
+						title: 'Zap.Foo.bar',
+						properties: {
+							baz: {
+								node: { type: 'number', title: 'Zap.Foo.bar.baz' },
+								required: true,
+							}
+						},
+						additionalProperties: false,
+					},
+				},
+			},
+			additionalProperties: false,
+		}
+	]);
+})
+
 
 describe( "unsupported", ( ) =>
 {
