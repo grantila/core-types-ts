@@ -20,7 +20,7 @@
   "scripts": {
     "build": "./node_modules/.bin/rimraf dist && ./node_modules/.bin/tsc -p tsconfig.prod.json",
     "test": "node_modules/.bin/jest --coverage",
-    "cz": "git-cz"
+    "cz": "git-cz --disable-emoji"
   },
   "repository": {
     "type": "git",
@@ -35,15 +35,16 @@
   ],
   "dependencies": {
     "core-types": "^1.10.0",
-    "typescript": "^4.7.4"
+    "typescript": "^4.9.5"
   },
   "devDependencies": {
-    "@types/jest": "^28.1.2",
+    "@types/jest": "^29.4.0",
     "cz-conventional-changelog": "^3.3.0",
-    "jest": "^28.1.1",
-    "rimraf": "^3.0.2",
-    "ts-jest": "^28.0.5",
-    "ts-node": "^10.8.1"
+    "git-cz": "^4.9.0",
+    "jest": "^29.4.1",
+    "rimraf": "^4.1.2",
+    "ts-jest": "^29.0.5",
+    "ts-node": "^10.9.1"
   },
   "config": {
     "commitizen": {
@@ -62,5 +63,6 @@
       "text",
       "html"
     ]
-  }
+  },
+  "packageManager": "yarn@3.2.4"
 }
