@@ -1,8 +1,8 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`core-types-to-ts complex type 1`] = `
-Object {
-  "convertedTypes": Array [
+{
+  "convertedTypes": [
     "foo",
   ],
   "data": "/* tslint:disable */
@@ -33,7 +33,7 @@ export declare interface foo {
     ];
 }
 ",
-  "notConvertedTypes": Array [],
+  "notConvertedTypes": [],
 }
 `;
 
@@ -61,8 +61,8 @@ export type foo = string;
 `;
 
 exports[`core-types-to-ts should write annotations properly 1`] = `
-Object {
-  "convertedTypes": Array [
+{
+  "convertedTypes": [
     "User",
     "ChatLine",
     "Thingy",
@@ -81,10 +81,10 @@ Object {
  * This type holds the user information, such as name
  *
  * @example
- *     { name: \\"Joe\\" }
+ *     { name: "Joe" }
  *
  * @default
- *     { user: \\"\\" }
+ *     { user: "" }
  *
  * @see http://username
  */
@@ -92,7 +92,7 @@ export interface User {
     /**
      * The real name
      *
-     * Must be a valid name, not *\\\\/
+     * Must be a valid name, not *\\/
      */
     name: string;
 }
@@ -117,13 +117,13 @@ export type Thingy = /**
 Thing | /** Just a number */
 number;
 ",
-  "notConvertedTypes": Array [],
+  "notConvertedTypes": [],
 }
 `;
 
 exports[`core-types-to-ts simple string union of separate types 1`] = `
-Object {
-  "convertedTypes": Array [
+{
+  "convertedTypes": [
     "bar",
     "foo",
   ],
@@ -135,17 +135,17 @@ Object {
  *  - {@link https://github.com/grantila/core-types-ts}
  */
 
-export type bar = \\"bar\\";
+export type bar = "bar";
 
-export type foo = bar | (\\"foo\\" | \\"baz\\");
+export type foo = bar | ("foo" | "baz");
 ",
-  "notConvertedTypes": Array [],
+  "notConvertedTypes": [],
 }
 `;
 
 exports[`core-types-to-ts simple string union type as declaration 1`] = `
-Object {
-  "convertedTypes": Array [
+{
+  "convertedTypes": [
     "foo",
   ],
   "data": "/* tslint:disable */
@@ -156,15 +156,15 @@ Object {
  *  - {@link https://github.com/grantila/core-types-ts}
  */
 
-export declare type foo = \\"foo\\" | \\"bar\\" | \\"baz\\";
+export declare type foo = "foo" | "bar" | "baz";
 ",
-  "notConvertedTypes": Array [],
+  "notConvertedTypes": [],
 }
 `;
 
 exports[`core-types-to-ts simple type 1`] = `
-Object {
-  "convertedTypes": Array [
+{
+  "convertedTypes": [
     "foo",
   ],
   "data": "/* tslint:disable */
@@ -177,13 +177,13 @@ Object {
 
 export type foo = string;
 ",
-  "notConvertedTypes": Array [],
+  "notConvertedTypes": [],
 }
 `;
 
 exports[`core-types-to-ts simple type as declaration 1`] = `
-Object {
-  "convertedTypes": Array [
+{
+  "convertedTypes": [
     "foo",
   ],
   "data": "/* tslint:disable */
@@ -196,13 +196,13 @@ Object {
 
 export declare type foo = string;
 ",
-  "notConvertedTypes": Array [],
+  "notConvertedTypes": [],
 }
 `;
 
 exports[`core-types-to-ts used in readme 1`] = `
-Object {
-  "convertedTypes": Array [
+{
+  "convertedTypes": [
     "User",
     "ChatLine",
   ],
@@ -230,6 +230,6 @@ export interface ChatLine {
     line: string;
 }
 ",
-  "notConvertedTypes": Array [],
+  "notConvertedTypes": [],
 }
 `;
