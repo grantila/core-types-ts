@@ -136,7 +136,6 @@ function createExportModifier( declaration: boolean )
 function declareType( declaration: boolean, name: string, node: ts.TypeNode )
 {
 	return factory.createTypeAliasDeclaration(
-		undefined, // decorators
 		createExportModifier( declaration ), // modifiers
 		factory.createIdentifier( name ),
 		undefined, // type parameters
@@ -151,7 +150,6 @@ function declareInterface(
 )
 {
 	return factory.createInterfaceDeclaration(
-			undefined, // decorators
 			createExportModifier( declaration ), // modifiers
 			factory.createIdentifier( name ),
 			undefined, // type parameters
@@ -328,11 +326,9 @@ function createAdditionalMembers( ctx: Context, type: true | NodeType )
 		return createAdditionalMembers( ctx, { type: 'any' } );
 
 	return factory.createIndexSignature(
-		undefined, // decorators
 		undefined, // modifiers
 		[
 			factory.createParameterDeclaration(
-				undefined, // decorators
 				undefined, // modifiers
 				undefined, // dotdotdot token
 				'key',
