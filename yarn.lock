@@ -1942,7 +1942,7 @@ __metadata:
   resolution: "core-types-ts@workspace:."
   dependencies:
     "@types/jest": ^29.4.0
-    core-types: ^1.10.0
+    core-types: ^2.0.1
     cz-conventional-changelog: ^3.3.0
     git-cz: ^4.9.0
     jest: ^29.4.1
@@ -1953,10 +1953,10 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"core-types@npm:^1.10.0":
-  version: 1.10.0
-  resolution: "core-types@npm:1.10.0"
-  checksum: 9a5512189a23edc01a944331e0b8eb9261f2246ec6b60f7bc1795bf31bc13b1d5568f47eaff11f9df1552c0edb2f6bf57a5a015cf8dc37ca1c4c0483f74f1807
+"core-types@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "core-types@npm:2.0.1"
+  checksum: 55ac67805b3d464fd177231b9512ecdbf54edc148d53d1f04d4bf4e48678b1bc4c1ef72f5e367b781d28a12b8ef320a5ffcbaca4349d11eb7806d64074d41c0b
   languageName: node
   linkType: hard
 
