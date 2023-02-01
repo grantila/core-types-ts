@@ -2,7 +2,6 @@
 [![downloads][downloads-image]][npm-url]
 [![build status][build-image]][build-url]
 [![coverage status][coverage-image]][coverage-url]
-[![Language grade: JavaScript][lgtm-image]][lgtm-url]
 [![Node.JS version][node-version]][node-url]
 
 
@@ -117,12 +116,10 @@ interface FromTsOptions
 [npm-image]: https://img.shields.io/npm/v/core-types-ts.svg
 [npm-url]: https://npmjs.org/package/core-types-ts
 [downloads-image]: https://img.shields.io/npm/dm/core-types-ts.svg
-[build-image]: https://img.shields.io/github/workflow/status/grantila/core-types-ts/Master.svg
+[build-image]: https://img.shields.io/github/actions/workflow/status/grantila/core-types-ts/master.yml?branch=master
 [build-url]: https://github.com/grantila/core-types-ts/actions?query=workflow%3AMaster
 [coverage-image]: https://coveralls.io/repos/github/grantila/core-types-ts/badge.svg?branch=master
 [coverage-url]: https://coveralls.io/github/grantila/core-types-ts?branch=master
-[lgtm-image]: https://img.shields.io/lgtm/grade/javascript/g/grantila/core-types-ts.svg?logo=lgtm&logoWidth=18
-[lgtm-url]: https://lgtm.com/projects/g/grantila/core-types-ts/context:javascript
 [node-version]: https://img.shields.io/node/v/core-types-ts
 [node-url]: https://nodejs.org/en/
 
