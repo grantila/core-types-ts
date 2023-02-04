@@ -61,6 +61,13 @@ export function convertCoreTypesToTypeScript(
 
 	const convertedTypes: Array< string > = [ ];
 
+	const wrapInNamespaces = ( code: string, namespaceList: string[ ] ) =>
+		namespaceList.length === 0
+			? code
+			: namespaceList.map( ns => `namespace ${ns} {` ).join( ' ' ) +
+				`\n${code}\n` +
+				namespaceList.map( ( ) => '}' ).join( ' ' );
+
 	const sourceCode =
 		types
 		.map( node =>
@@ -73,8 +80,8 @@ export function convertCoreTypesToTypeScript(
 
 			return tsNode;
 		} )
-		.map( tsNode =>
-			generateCode( tsNode )
+		.map( ( { declaration: tsNode, namespaceList } ) =>
+			wrapInNamespaces( generateCode( tsNode ), namespaceList )
 		)
 		.join( "\n\n" );
 
@@ -96,20 +103,23 @@ export function convertCoreTypesToTypeScript(
 
 export function convertSingleCoreTypeToTypeScriptAst(
 	node: NamedType,
-	opts: Pick< ToTsOptions, 'useUnknown' | 'declaration' > = { }
+	opts: Pick< ToTsOptions, 'useUnknown' | 'declaration' | 'namespaces' > =
+		{ }
 )
-: ts.Declaration
+: { declaration: ts.Declaration; namespaceList: string[ ]; }
 {
 	const {
 		useUnknown = false,
 		declaration = false,
+		namespaces = 'ignore',
 	} = opts;
 
 	const ctx: Context = {
 		useUnknown,
 	};
 
-	const { name } = node;
+	const { name, namespaces: namespaceList } =
+		makeNameAndNamespace( node.name, namespaces );
 
 	const ret = tsType( ctx, node );
 
@@ -121,7 +131,30 @@ export function convertSingleCoreTypeToTypeScriptAst(
 		? declareType( declaration, name, ret.node )
 		: declareInterface( declaration, name, ret.properties );
 
-	return doExport( typeDeclaration );
+	return {
+		declaration: doExport( typeDeclaration ),
+		namespaceList,
+	};
+}
+
+function makeNameAndNamespace(
+	name: string,
+	namespaces: ToTsOptions[ 'namespaces' ]
+)
+: { name: string; namespaces: string[ ]; }
+{
+	if ( !namespaces || namespaces === 'ignore' )
+		return { name, namespaces: [ ] };
+
+	const parts = name
+		.split(
+			namespaces === 'dot' ? '.' :
+			namespaces === 'underscore' ? '_' :
+			/[._]/
+		);
+
+	const lastPart = parts.pop( )!;
+	return { name: lastPart, namespaces: parts };
 }
 
 function createExportModifier( declaration: boolean )

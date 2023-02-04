@@ -53,4 +53,128 @@ describe( "bi-directional conversion", ( ) =>
 
 		expect( ts.data ).toMatchSnapshot( );
 	} );
+
+	it( "should handle namespaces with underscore", ( ) =>
+	{
+		const ct = convertTypeScriptToCoreTypes(
+			`
+			namespace Foo {
+				namespace Bar {
+					export type Baz = 42;
+				}
+			}
+			`,
+			{ namespaces: 'join-underscore' }
+		);
+
+		const ts = convertCoreTypesToTypeScript(
+			ct.data,
+			{
+				namespaces: 'underscore',
+				noDescriptiveHeader: true,
+				noDisableLintHeader: true,
+			}
+		);
+
+		expect( ts.data ).toBe(
+`namespace Foo { namespace Bar {
+export type Baz = 42;
+} }
+`
+		);
+	} );
+
+	it( "should handle namespaces with dot", ( ) =>
+	{
+		const ct = convertTypeScriptToCoreTypes(
+			`
+			namespace Foo {
+				namespace Bar {
+					export type Baz = 42;
+				}
+			}
+			`,
+			{ namespaces: 'join-dot' }
+		);
+
+		const ts = convertCoreTypesToTypeScript(
+			ct.data,
+			{
+				namespaces: 'dot',
+				noDescriptiveHeader: true,
+				noDisableLintHeader: true,
+			}
+		);
+
+		expect( ts.data ).toBe(
+`namespace Foo { namespace Bar {
+export type Baz = 42;
+} }
+`
+		);
+	} );
+
+	it( "should handle namespaces with underscore, as all", ( ) =>
+	{
+		const ct = convertTypeScriptToCoreTypes(
+			`
+			namespace Foo {
+				namespace Bar {
+					export type Baz = 42;
+				}
+			}
+			export type Bak = 17;
+			`,
+			{ namespaces: 'join-underscore' }
+		);
+
+		const ts = convertCoreTypesToTypeScript(
+			ct.data,
+			{
+				namespaces: 'all',
+				noDescriptiveHeader: true,
+				noDisableLintHeader: true,
+			}
+		);
+
+		expect( ts.data ).toBe(
+`namespace Foo { namespace Bar {
+export type Baz = 42;
+} }
+
+export type Bak = 17;
+`
+		);
+	} );
+
+	it( "should handle ignore namespaces", ( ) =>
+	{
+		const ct = convertTypeScriptToCoreTypes(
+			`
+			namespace Foo {
+				namespace Bar {
+					export type Baz = 42;
+				}
+			}
+			export type Bak = 17;
+			`,
+			{ namespaces: 'join-underscore' }
+		);
+
+		const ts = convertCoreTypesToTypeScript(
+			ct.data,
+			{
+				namespaces: 'ignore',
+				noDescriptiveHeader: true,
+				noDisableLintHeader: true,
+			}
+		);
+
+		expect( ts.data ).toBe(
+`export type Foo_Bar_Baz = 42;
+
+export type Bak = 17;
+`
+		);
+	} );
 } );

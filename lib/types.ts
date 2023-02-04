@@ -48,6 +48,22 @@ export interface ToTsOptions
 	noDescriptiveHeader?: boolean;
 
 	/**
+	 * Try to reconstruct namespaces:
+	 *
+	 *  - `ignore`: Don't try to reconstruct namespaces (default)
+	 *  - `dot`: Split names by dot (.) as namespaces for top-level types
+	 *  - `underscore`: Split names by underscore (_) as namespaces for
+	 *    top-level types
+	 *  - `all`: Split by dot (.) and/or underscores (_) as namespaces for
+	 *    top-level types
+	 */
+	namespaces?:
+		| 'ignore'
+		| 'dot'
+		| 'underscore'
+		| 'all';
+
+	/**
 	 * What to do when detecting an unsupported type
 	 *
 	 *  - `ignore`: Ignore (skip) type
