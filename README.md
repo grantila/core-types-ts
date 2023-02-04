@@ -56,6 +56,7 @@ interface ToTsOptions
 	userPackageUrl?: string;
 	noDisableLintHeader?: boolean;
 	noDescriptiveHeader?: boolean;
+	namespaces?: 'ignore'| 'dot'| 'underscore'| 'all';
 	unsupported?: 'ignore' | 'warn' | 'error';
 }
 ```
@@ -71,6 +72,11 @@ These options are all optional.
  * `userPackageUrl`: The url to the package using this package.
  * `noDisableLintHeader`: Prevent writing the "disable linting" comment.
  * `noDescriptiveHeader`: Do no write a top-level descriptive comment about the auto-generated file
+ * `namespaces`: Try to reconstruct namespaces
+   * `ignore`: Don't try to reconstruct namespaces (default)
+   * `dot`: Split names by dot (.) as namespaces for top-level types
+   * `underscore`: Split names by underscore (_) as namespaces for top-level types
+   * `all`: Split by dot (.) and/or underscores (_) as namespaces for top-level types
  * `unsupported`: What to do when detecting an unsupported type
    * `ignore`: Ignore (skip) type
    * `warn`: Ignore type, but warn (default)
@@ -95,12 +101,18 @@ An optional second argument can be provided on the form
 interface FromTsOptions
 {
 	warn?: WarnFunction;
+	namespaces?: 'ignore' | 'hoist' | 'join-dot' | 'join-underscore';
 	nonExported?: 'fail' | 'ignore' | 'include' | 'inline' | 'include-if-referenced';
 	unsupported?: 'ignore' | 'warn' | 'error';
 }
 ```
 
  * `warn`: The same warn function as in [CoreTypesToGraphqlOptions](#core-types-to-graphql)
+ * `namespaces`: How to deal with namespaces
+   *`ignore`: Ignore namespaces entirely (default)
+   * `hoist`: Hoist types inside namespaces to top-level, so that the types are included, but without their namespace. This can cause conflicts, in which case deeper declarations will be dropped in favor of more top-level declarations. Same-level will be exported non-deterministically.
+   * `join-dot`: Join namespaces and types with a dot (.)
+   * `join-underscore`: Join namespaces and types with an underscore (_)
  * `nonExported`: How to handle references to non-exported types
    * `fail`: Fail conversion with an Error
    * `ignore`: Don't include non-exported types, but allow references to them
