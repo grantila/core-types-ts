@@ -1101,11 +1101,19 @@ describe( "generics", ( ) =>
 			{
 				name: 'Bar',
 				title: 'Bar',
-				type: 'any',
+				type: 'object',
+				properties: {
+					foo: {
+						required: false,
+						node: { type: 'string', title: 'Foo.foo' },
+					},
+				},
+				additionalProperties: false,
 			}
 		] );
-		expect( warn.mock.calls.length ).toBe( 1 );
+		expect( warn.mock.calls.length ).toBe( 2 );
 		expect( warn.mock.calls[ 0 ][ 0 ] ).toMatch( /Will not convert/ );
+		expect( warn.mock.calls[ 1 ][ 0 ] ).toMatch( /Will not convert/ );
 	} );
 
 	it( "generic interfaces are not supported yet", ( ) =>
@@ -1140,5 +1148,245 @@ describe( "generics", ( ) =>
 		expect( warn.mock.calls.length ).toBe( 1 );
 		expect( warn.mock.calls[ 0 ][ 0 ] )
 			.toMatch( 'Generic types are not supported' );
+	} );
+} );
+
+describe( "omit", ( ) =>
+{
+	it( "handle Omit of one property", ( ) =>
+	{
+		const coreTypes = convertTypeScriptToCoreTypes(
+			`
+				interface Foo {
+					bar: number;
+					baz: string;
+				}
+				export type Fee = Omit< Foo, 'baz' >;
+			`
+		).data.types;
+
+		equal( coreTypes, [
+			{
+				name: 'Fee',
+				title: 'Fee',
+				type: 'object',
+				properties: {
+					bar: {
+						node: {
+							type: 'number',
+							title: 'Foo.bar',
+						},
+						required: true,
+					},
+				},
+				additionalProperties: false,
+			},
+		] );
+	} );
+
+	it( "handle Omit of multiple properties", ( ) =>
+	{
+		const coreTypes = convertTypeScriptToCoreTypes(
+			`
+				interface Foo {
+					bar: number;
+					baz: string;
+					bak: string;
+				}
+				export type Fee = Omit< Foo, 'baz' | 'bak' >;
+			`
+		).data.types;
+
+		equal( coreTypes, [
+			{
+				name: 'Fee',
+				title: 'Fee',
+				type: 'object',
+				properties: {
+					bar: {
+						node: {
+							type: 'number',
+							title: 'Foo.bar',
+						},
+						required: true,
+					},
+				},
+				additionalProperties: false,
+			},
+		] );
+	} );
+} );
+
+describe( "pick", ( ) =>
+{
+	it( "handle Pick of one property", ( ) =>
+	{
+		const coreTypes = convertTypeScriptToCoreTypes(
+			`
+				interface Foo {
+					bar: number;
+					baz: string;
+				}
+				export type Fee = Pick< Foo, 'bar' >;
+			`
+		).data.types;
+
+		equal( coreTypes, [
+			{
+				name: 'Fee',
+				title: 'Fee',
+				type: 'object',
+				properties: {
+					bar: {
+						node: {
+							type: 'number',
+							title: 'Foo.bar',
+						},
+						required: true,
+					},
+				},
+				additionalProperties: false,
+			},
+		] );
+	} );
+
+	it( "handle Pick of multiple properties", ( ) =>
+	{
+		const coreTypes = convertTypeScriptToCoreTypes(
+			`
+				interface Foo {
+					bar: number;
+					baz: string;
+					bak: string;
+				}
+				export type Fee = Pick< Foo, 'bar' | 'baz' >;
+			`
+		).data.types;
+
+		equal( coreTypes, [
+			{
+				name: 'Fee',
+				title: 'Fee',
+				type: 'object',
+				properties: {
+					bar: {
+						node: {
+							type: 'number',
+							title: 'Foo.bar',
+						},
+						required: true,
+					},
+					baz: {
+						node: {
+							type: 'string',
+							title: 'Foo.baz',
+						},
+						required: true,
+					},
+				},
+				additionalProperties: false,
+			},
+		] );
+	} );
+} );
+
+describe( "partial", ( ) =>
+{
+	it( "handle Partial", ( ) =>
+	{
+		const coreTypes = convertTypeScriptToCoreTypes(
+			`
+				interface Foo {
+					bar: number;
+					baz: string;
+					bak?: boolean;
+				}
+				export type Fee = Partial< Foo >;
+			`
+		).data.types;
+
+		equal( coreTypes, [
+			{
+				name: 'Fee',
+				title: 'Fee',
+				type: 'object',
+				properties: {
+					bar: {
+						node: {
+							type: 'number',
+							title: 'Foo.bar',
+						},
+						required: false,
+					},
+					baz: {
+						node: {
+							type: 'string',
+							title: 'Foo.baz',
+						},
+						required: false,
+					},
+					bak: {
+						node: {
+							type: 'boolean',
+							title: 'Foo.bak',
+						},
+						required: false,
+					},
+				},
+				additionalProperties: false,
+			},
+		] );
+	} );
+} );
+
+describe( "comples partial/pick/omit", ( ) =>
+{
+	it( "handle complex deep case", ( ) =>
+	{
+		const coreTypes = convertTypeScriptToCoreTypes(
+			`
+				interface Foo {
+					a: 'aa';
+					b?: 'bb';
+					c: 'cc';
+					d?: 'dd';
+					e: 'ee';
+					f?: 'ff';
+				}
+				export type Fee = Omit<
+					Partial<
+						Pick< Foo, 'a' | 'b' | 'c' | 'd' >
+					>,
+					'a' | 'b'
+				>;
+			`
+		).data.types;
+
+		equal( coreTypes, [
+			{
+				name: 'Fee',
+				title: 'Fee',
+				type: 'object',
+				properties: {
+					c: {
+						node: {
+							type: 'string',
+							const: 'cc',
+							title: 'Foo.c',
+						},
+						required: false,
+					},
+					d: {
+						node: {
+							type: 'string',
+							const: 'dd',
+							title: 'Foo.d',
+						},
+						required: false,
+					},
+				},
+				additionalProperties: false,
+			},
+		] );
 	} );
 } );

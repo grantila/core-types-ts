@@ -147,13 +147,20 @@ function extractTags( tags: ReadonlyArray< ts.JSDocTag > ): CoreTypeAnnotations
 	};
 }
 
-export function decorateNode( node: ts.Node ): CoreTypeAnnotations
+export interface DecorateNodeOptions {
+	includeJsDoc?: boolean;
+}
+
+export function decorateNode( node: ts.Node, options?: DecorateNodeOptions )
+: CoreTypeAnnotations
 {
+	const { includeJsDoc = true } = options ?? { };
+
 	const { jsDoc } = ( node as unknown as JSDocContainer );
 
 	const titleAnnotation = extractTitle( node );
 
-	if ( jsDoc && jsDoc.length )
+	if ( includeJsDoc && jsDoc && jsDoc.length )
 	{
 		// TODO: Analyze when this can be larger than 1 and why
 		const first = jsDoc[ 0 ];

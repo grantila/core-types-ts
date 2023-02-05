@@ -419,9 +419,20 @@ function fromTsObjectMembers(
 	return ret;
 }
 
-function fromTsTypeNode( node: ts.TypeNode, ctx: Context )
+interface FromTsTypeNodeOptions {
+	/** Don't handle extra/inline reference cases, just return the type */
+	peekOnly?: boolean;
+}
+
+function fromTsTypeNode(
+	node: ts.TypeNode,
+	ctx: Context,
+	options?: FromTsTypeNodeOptions,
+)
 : NodeType | undefined
 {
+	const { peekOnly = false } = options ?? { };
+
 	if ( ts.isUnionTypeNode( node ) )
 		return {
 			type: 'or',
@@ -512,29 +523,210 @@ function fromTsTypeNode( node: ts.TypeNode, ctx: Context )
 			};
 		}
 
-		if ( isGenericType( node ) )
-			return handleGeneric( node, ctx );
-
 		const ref = node.typeName.text;
 
+		const ensureNonCyclic = ( name: string ) =>
+		{
+			if ( ctx.cyclicState.has( name ) )
+				throw new MalformedTypeError(
+					`Cyclic type found when trying to inline type ${name}`,
+					{
+						blob: node,
+						loc: toLocation( node ),
+					}
+				);
+			ctx.cyclicState.add( name );
+		};
+
+		// TODO: Make this able to go into named type.
+		// It currently understands:
+		// 'foo' | 'bar'
+		// but not
+		// Xyz
+		// where somewhere else:
+		// type Xyz = 'foo' | 'bar'
+		const getStringUnion = ( su: ts.TypeNode ): undefined | string[ ] =>
+		{
+			if (
+				ts.isLiteralTypeNode( su ) &&
+				ts.isStringLiteral( su.literal )
+			)
+				return [ su.literal.text ];
+
+			if ( !ts.isUnionTypeNode( su ) )
+				return ctx.handleError( ctx.getUnsupportedError(
+					`Expected string union kind`,
+					su
+				) );
+
+			const names = su.types.map( subType =>
+				ts.isLiteralTypeNode( subType ) &&
+				ts.isStringLiteral( subType.literal )
+					? subType.literal.text
+					: undefined as any as string
+			);
+			if ( names.some( name => typeof name === 'undefined' ) )
+				return ctx.handleError( ctx.getUnsupportedError(
+					`Expected string union kind`,
+					su
+				) );
+
+			return names;
+		};
+
+		const getReferencedType = ( ) =>
+		{
+			const typeArguments = node.typeArguments ?? [ ];
+			const refType = typeArguments[ 0 ];
+			const secondNameTypes = typeArguments[ 1 ];
+			const secondNames =
+				typeof secondNameTypes === 'undefined'
+				? undefined
+				: getStringUnion( secondNameTypes );
+
+			if ( typeof refType === 'undefined' )
+				return ctx.handleError( ctx.getUnsupportedError(
+					`${ref}<> of non-objects are not supported`,
+					node
+				) );
+
+			const subType = fromTsTypeNode( refType, ctx, { peekOnly: true } );
+			if ( typeof subType === 'undefined' )
+				return ctx.handleError( ctx.getUnsupportedError(
+					`${ref}<> of non-objects are not supported`,
+					node
+				) );
+
+			if ( subType.type === 'ref' )
+			{
+				const refName = refType.getText( )!;
+				const reference = ctx.typeMap.get( refName );
+
+				if (
+					!reference
+					||
+					!ts.isTypeLiteralNode( reference.declaration )
+					&&
+					!ts.isInterfaceDeclaration( reference.declaration )
+				)
+					return ctx.handleError( ctx.getUnsupportedError(
+						`${ref}<> of non-objects are not supported`,
+						node
+					) );
+
+				ensureNonCyclic( refName );
+				const members = fromTsObjectMembers( reference.declaration, ctx );
+
+				return { members, secondNames };
+			}
+			else if ( subType.type === 'object' )
+			{
+				return { members: subType, secondNames };
+			}
+			else
+				return ctx.handleError( ctx.getUnsupportedError(
+					`${ref}<> of non-objects are not supported`,
+					node
+				) );
+		}
+
+		if ( ref === 'Omit' )
+		{
+			const reference = getReferencedType( );
+			if ( !reference )
+				return undefined;
+
+			const { members, secondNames } = reference;
+
+			if ( typeof secondNames === 'undefined' )
+				return undefined;
+
+			const filteredMembers: typeof members = {
+				...members,
+				properties: Object.fromEntries(
+					Object.entries( members.properties )
+					.filter( ( [ name ] ) => !secondNames.includes( name ) )
+				),
+			};
+
+			return {
+				type: 'object',
+				...filteredMembers,
+				...decorateNode(
+					node,
+					{ includeJsDoc: false }
+				),
+			};
+		}
+		else if ( ref === 'Pick' )
+		{
+			const reference = getReferencedType( );
+			if ( !reference )
+				return undefined;
+
+			const { members, secondNames } = reference;
+
+			if ( typeof secondNames === 'undefined' )
+				return undefined;
+
+			const filteredMembers: typeof members = {
+				...members,
+				properties: Object.fromEntries(
+					Object.entries( members.properties )
+					.filter( ( [ name ] ) => secondNames.includes( name ) )
+				),
+			};
+
+			return {
+				type: 'object',
+				...filteredMembers,
+				...decorateNode(
+					node,
+					{ includeJsDoc: false }
+				),
+			};
+		}
+		else if ( ref === 'Partial' )
+		{
+			const reference = getReferencedType( );
+			if ( !reference )
+				return undefined;
+
+			const { members } = reference;
+
+			const filteredMembers: typeof members = {
+				...members,
+				properties: Object.fromEntries(
+					Object.entries( members.properties )
+					.map( ( [ name, value ] ) => [
+						name,
+						{ ...value, required: false },
+					] )
+				),
+			};
+
+			return {
+				type: 'object',
+				...filteredMembers,
+				...decorateNode(
+					node,
+					{ includeJsDoc: false }
+				),
+			};
+		}
+
+		if ( isGenericType( node ) )
+			return handleGeneric( node, ctx );
 		// TODO: Handle (reconstruct) generics
 
 		const typeInfo = ctx.typeMap.get( ref );
-		if ( typeInfo && !typeInfo.exported )
+		if ( typeInfo && !typeInfo.exported && !peekOnly )
 		{
 			if ( ctx.options.nonExported === 'include-if-referenced' )
 				ctx.includeExtra.add( ref );
 			else if ( ctx.options.nonExported === 'inline' )
 			{
-				if ( ctx.cyclicState.has( ref ) )
-					throw new MalformedTypeError(
-						`Cyclic type found when trying to inline type ${ref}`,
-						{
-							blob: node,
-							loc: toLocation( node ),
-						}
-					);
-				ctx.cyclicState.add( ref );
+				ensureNonCyclic( ref );
 				return fromTsTopLevelNode( typeInfo.declaration, ctx );
 			}
 		}
