@@ -71,6 +71,8 @@ export function convertTypeScriptToCoreTypes(
 		unsupported = 'ignore',
 	} = options ?? { };
 
+	const notConvertedTypes = new Set< string >( );
+
 	const sourceFile = ts.createSourceFile(
 		"filename.ts",
 		sourceCode,
@@ -123,6 +125,21 @@ export function convertTypeScriptToCoreTypes(
 				.filter( ( v ): v is NonNullable< typeof v > => !!v ),
 		];
 
+	const registerDeclarationAsNonExported = (
+		exportedDeclaration: ExportedDeclaration
+	) =>
+	{
+		const { declaration, namespaceParents } = exportedDeclaration;
+
+		const fullName = [
+			...namespaceParents,
+			declaration.name.getText( ),
+		]
+		.join( '.' );
+
+		notConvertedTypes.add( fullName );
+	}
+
 	const filterConflicts = ( declarations: Array< ExportedDeclaration > )
 		: Array< ExportedDeclaration > =>
 		{
@@ -145,6 +162,12 @@ export function convertTypeScriptToCoreTypes(
 				{
 					// Replace with higher-level declaration
 					byName.set( name, exportedDeclaration );
+
+					registerDeclarationAsNonExported( item );
+				}
+				else
+				{
+					registerDeclarationAsNonExported( exportedDeclaration );
 				}
 			} );
 
@@ -256,8 +279,6 @@ export function convertTypeScriptToCoreTypes(
 				}
 			);
 		} );
-
-	const notConvertedTypes = new Set< string >( );
 
 	const convertTopLevel = ( statement: TopLevelDeclaration ) =>
 	{

@@ -922,9 +922,9 @@ describe( "namespaces", ( ) =>
 				}
 			`,
 			{ namespaces: 'hoist' }
-		).data.types;
+		);
 
-		equal( coreTypes, [
+		equal( coreTypes.data.types, [
 			{
 				name: 'Foo',
 				title: 'Foo',
@@ -955,6 +955,8 @@ describe( "namespaces", ( ) =>
 				additionalProperties: false,
 			}
 		] );
+
+		expect( coreTypes.notConvertedTypes.join( ',' ) ).toBe( '' );
 	} );
 
 	it( "interface within multiple namespace, use hoist conflict", ( ) =>
@@ -975,9 +977,9 @@ describe( "namespaces", ( ) =>
 				}
 			`,
 			{ namespaces: 'hoist' }
-		).data.types;
+		);
 
-		equal( coreTypes, [
+		equal( coreTypes.data.types, [
 			{
 				name: 'Foo',
 				title: 'Foo',
@@ -991,6 +993,9 @@ describe( "namespaces", ( ) =>
 				additionalProperties: false,
 			}
 		] );
+
+		expect( coreTypes.notConvertedTypes.join( ',' ) )
+			.toBe( 'Zap.Zip.Foo' );
 	} );
 
 	it( "interface within multiple namespace, ignore", ( ) =>
