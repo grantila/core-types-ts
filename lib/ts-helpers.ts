@@ -107,7 +107,9 @@ export function toLocation( node: ts.Node ): Location
 	};
 }
 
-export function isExportedDeclaration( node: ts.Statement )
+export function isExportedDeclaration(
+	node: ts.TypeAliasDeclaration | ts.InterfaceDeclaration
+)
 {
 	return !!node.modifiers?.some( modifier =>
 		modifier.kind === ts.SyntaxKind.ExportKeyword
