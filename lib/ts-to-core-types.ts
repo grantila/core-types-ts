@@ -1,3 +1,4 @@
+import ts from 'typescript'
 import {
 	type AnyType,
 	type ConversionResult,
@@ -14,7 +15,6 @@ import {
 	UnsupportedError,
 } from 'core-types'
 
-import { ts, tst } from './ts.js'
 import type { FromTsOptions } from './types.js'
 import {
 	isExportedDeclaration,
@@ -26,7 +26,7 @@ import { decorateNode } from './ts-annotations.js'
 
 const anyType: AnyType = { type: 'any' };
 
-type TopLevelDeclaration = tst.TypeAliasDeclaration | tst.InterfaceDeclaration;
+type TopLevelDeclaration = ts.TypeAliasDeclaration | ts.InterfaceDeclaration;
 
 interface TopLevelEntry {
 	declaration: TopLevelDeclaration;
@@ -39,7 +39,7 @@ interface Context
 	typeMap: Map< string, TopLevelEntry >;
 	includeExtra: Set< string >;
 	cyclicState: Set< string >;
-	getUnsupportedError( message: string, node: tst.Node ): UnsupportedError;
+	getUnsupportedError( message: string, node: ts.Node ): UnsupportedError;
 	handleError( err: UnsupportedError ): undefined | never;
 }
 
@@ -81,7 +81,7 @@ export function convertTypeScriptToCoreTypes(
 	);
 
 	const isTopLevelDeclaration =
-		( statement: tst.Statement ): statement is TopLevelDeclaration =>
+		( statement: ts.Statement ): statement is TopLevelDeclaration =>
 			ts.isTypeAliasDeclaration( statement )
 			||
 			ts.isInterfaceDeclaration( statement );
@@ -93,12 +93,12 @@ export function convertTypeScriptToCoreTypes(
 
 	const recurseNamespaces = (
 			namespaceParents: Array< string >,
-			statements: tst.NodeArray< tst.Statement >
+			statements: ts.NodeArray< ts.Statement >
 		): Array< ExportedDeclaration > =>
 		[
 			...statements
 				.filter(
-					( statement ): statement is tst.NamespaceDeclaration =>
+					( statement ): statement is ts.NamespaceDeclaration =>
 						ts.isModuleDeclaration( statement )
 				)
 				.flatMap( statement =>
@@ -319,16 +319,16 @@ export function convertTypeScriptToCoreTypes(
 	};
 }
 
-function isGenericType( node: tst.Node )
+function isGenericType( node: ts.Node )
 {
 	return !!(
-		( node as tst.NodeWithTypeArguments ).typeArguments?.length
+		( node as ts.NodeWithTypeArguments ).typeArguments?.length
 		||
-		( node as tst.TypeAliasDeclaration ).typeParameters?.length
+		( node as ts.TypeAliasDeclaration ).typeParameters?.length
 	);
 }
 
-function handleGeneric( node: tst.Node, ctx: Context )
+function handleGeneric( node: ts.Node, ctx: Context )
 {
 	return ctx.handleError( ctx.getUnsupportedError(
 		`Generic types are not supported`,
@@ -363,13 +363,13 @@ function fromTsTopLevelNode( node: TopLevelDeclaration, ctx: Context )
 		throw new Error( "Internal error" );
 }
 
-function isOptionalProperty( node: tst.PropertySignature )
+function isOptionalProperty( node: ts.PropertySignature )
 {
 	return node.questionToken?.kind === ts.SyntaxKind.QuestionToken;
 }
 
 function fromTsObjectMembers(
-	node: tst.InterfaceDeclaration | tst.TypeLiteralNode,
+	node: ts.InterfaceDeclaration | ts.TypeLiteralNode,
 	ctx: Context
 )
 : Pick< NodeObjectCoreType, 'properties' | 'additionalProperties' >
@@ -425,7 +425,7 @@ interface FromTsTypeNodeOptions {
 }
 
 function fromTsTypeNode(
-	node: tst.TypeNode,
+	node: ts.TypeNode,
 	ctx: Context,
 	options?: FromTsTypeNodeOptions,
 )
@@ -468,7 +468,7 @@ function fromTsTypeNode(
 				node
 			) );
 
-		return fromTsTypeNode( children[ 0 ] as tst.TypeNode, ctx );
+		return fromTsTypeNode( children[ 0 ] as ts.TypeNode, ctx );
 	}
 
 	else if ( node.kind === ts.SyntaxKind.AnyKeyword )
@@ -512,7 +512,7 @@ function fromTsTypeNode(
 
 		if ( node.typeName.text === 'Array' )
 		{
-			const typeArgs = node.typeArguments as tst.NodeArray< tst.TypeNode >;
+			const typeArgs = node.typeArguments as ts.NodeArray< ts.TypeNode >;
 			return {
 				type: 'array',
 				elementType:
@@ -545,7 +545,7 @@ function fromTsTypeNode(
 		// Xyz
 		// where somewhere else:
 		// type Xyz = 'foo' | 'bar'
-		const getStringUnion = ( su: tst.TypeNode ): undefined | string[ ] =>
+		const getStringUnion = ( su: ts.TypeNode ): undefined | string[ ] =>
 		{
 			if (
 				ts.isLiteralTypeNode( su ) &&
@@ -816,7 +816,7 @@ function fromTsTypeNode(
 	}
 }
 
-function fromTsTuple( node: tst.TupleTypeNode, ctx: Context )
+function fromTsTuple( node: ts.TupleTypeNode, ctx: Context )
 : Pick< TupleType, 'elementTypes' | 'additionalItems' | 'minItems' >
 {
 	if ( node.elements.length === 0 )
@@ -829,7 +829,7 @@ function fromTsTuple( node: tst.TupleTypeNode, ctx: Context )
 		hasRest
 		? [
 			node.elements.slice( 0, node.elements.length - 1 ),
-			node.elements[ node.elements.length - 1 ] as tst.RestTypeNode,
+			node.elements[ node.elements.length - 1 ] as ts.RestTypeNode,
 		]
 		: [ [ ...node.elements ], undefined ];
 
@@ -841,7 +841,7 @@ function fromTsTuple( node: tst.TupleTypeNode, ctx: Context )
 		rest
 		? (
 			fromTsTypeNode(
-				( rest.type as tst.ArrayTypeNode ).elementType,
+				( rest.type as ts.ArrayTypeNode ).elementType,
 				ctx
 			)
 			?? anyType

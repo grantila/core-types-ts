@@ -1,10 +1,10 @@
+import ts from 'typescript'
 import {
 	type CoreTypeAnnotations,
 	type Location,
 	stringifyAnnotations,
 } from 'core-types'
 
-import { ts, tst } from './ts.js'
 import type { ToTsOptions } from './types.js'
 
 
@@ -15,14 +15,14 @@ export function tsUnknownTypeAnnotation( )
 	return factory.createToken( ts.SyntaxKind.UnknownKeyword );
 }
 
-export function safeName( name: string ): tst.StringLiteral | tst.Identifier
+export function safeName( name: string ): ts.StringLiteral | ts.Identifier
 {
 	if ( name.match( /^[a-zA-Z$][a-zA-Z0-9_$]*$/ ) )
 		return factory.createIdentifier( name );
 	return factory.createStringLiteral( name );
 }
 
-export function wrapAnnotations<T extends tst.Node>(
+export function wrapAnnotations<T extends ts.Node>(
 	tsNode: T,
 	node: CoreTypeAnnotations,
 	blockComment = true
@@ -81,7 +81,7 @@ function starBefore( lines: Array< string > ): string
 	return lines.map( line => ` * ${line}` ).join( "\n" );
 }
 
-export function generateCode( node: tst.Node ): string
+export function generateCode( node: ts.Node ): string
 {
 	const printer = ts.createPrinter( { newLine: ts.NewLineKind.LineFeed } );
 	const resultFile = ts.createSourceFile(
@@ -95,12 +95,12 @@ export function generateCode( node: tst.Node ): string
 	return s;
 }
 
-export function tsStripOptionalType( node: tst.TypeNode ): tst.TypeNode
+export function tsStripOptionalType( node: ts.TypeNode ): ts.TypeNode
 {
 	return ts.isOptionalTypeNode( node ) ? node.type : node;
 }
 
-export function toLocation( node: tst.Node ): Location
+export function toLocation( node: ts.Node ): Location
 {
 	return {
 		start: node.pos,
@@ -109,7 +109,7 @@ export function toLocation( node: tst.Node ): Location
 }
 
 export function isExportedDeclaration(
-	node: tst.TypeAliasDeclaration | tst.InterfaceDeclaration
+	node: ts.TypeAliasDeclaration | ts.InterfaceDeclaration
 )
 {
 	return !!node.modifiers?.some( modifier =>
