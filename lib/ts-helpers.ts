@@ -1,10 +1,11 @@
-import * as ts from "typescript"
 import {
-	CoreTypeAnnotations,
+	type CoreTypeAnnotations,
+	type Location,
 	stringifyAnnotations,
-	Location,
-} from "core-types"
-import { ToTsOptions } from './types'
+} from 'core-types'
+
+import { ts, tst } from './ts.js'
+import type { ToTsOptions } from './types.js'
 
 
 const { factory } = ts;
@@ -14,14 +15,14 @@ export function tsUnknownTypeAnnotation( )
 	return factory.createToken( ts.SyntaxKind.UnknownKeyword );
 }
 
-export function safeName( name: string ): ts.StringLiteral | ts.Identifier
+export function safeName( name: string ): tst.StringLiteral | tst.Identifier
 {
 	if ( name.match( /^[a-zA-Z$][a-zA-Z0-9_$]*$/ ) )
 		return factory.createIdentifier( name );
 	return factory.createStringLiteral( name );
 }
 
-export function wrapAnnotations<T extends ts.Node>(
+export function wrapAnnotations<T extends tst.Node>(
 	tsNode: T,
 	node: CoreTypeAnnotations,
 	blockComment = true
@@ -80,7 +81,7 @@ function starBefore( lines: Array< string > ): string
 	return lines.map( line => ` * ${line}` ).join( "\n" );
 }
 
-export function generateCode( node: ts.Node ): string
+export function generateCode( node: tst.Node ): string
 {
 	const printer = ts.createPrinter( { newLine: ts.NewLineKind.LineFeed } );
 	const resultFile = ts.createSourceFile(
@@ -94,12 +95,12 @@ export function generateCode( node: ts.Node ): string
 	return s;
 }
 
-export function tsStripOptionalType( node: ts.TypeNode ): ts.TypeNode
+export function tsStripOptionalType( node: tst.TypeNode ): tst.TypeNode
 {
 	return ts.isOptionalTypeNode( node ) ? node.type : node;
 }
 
-export function toLocation( node: ts.Node ): Location
+export function toLocation( node: tst.Node ): Location
 {
 	return {
 		start: node.pos,
@@ -108,7 +109,7 @@ export function toLocation( node: ts.Node ): Location
 }
 
 export function isExportedDeclaration(
-	node: ts.TypeAliasDeclaration | ts.InterfaceDeclaration
+	node: tst.TypeAliasDeclaration | tst.InterfaceDeclaration
 )
 {
 	return !!node.modifiers?.some( modifier =>

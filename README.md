@@ -20,11 +20,20 @@ Other conversion packages:
  * [`core-types-suretype`][core-types-suretype-github-url] (which is also using this package)
 
 
+# Versions
+
+Since 4.0, this package is pure ESM and requires Node 14.13.1 or later.
+
+
 # Contents
 
- * [Usage](#usage)
-   * [core-types to TypeScript](#core-types-to-typescript)
-   * [TypeScript to core-types](#typescript-to-core-types)
+- [core-types-ts](#core-types-ts)
+  - [See](#see)
+- [Versions](#versions)
+- [Contents](#contents)
+- [Usage](#usage)
+  - [core-types to TypeScript](#core-types-to-typescript)
+  - [TypeScript to core-types](#typescript-to-core-types)
 
 
 # Usage

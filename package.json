@@ -11,15 +11,17 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "directories": {},
+  "type": "module",
+  "sideEffects": false,
   "engines": {
-    "node": ">=14"
+    "node": ">=14.13.1 || >=16.0.0"
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "./node_modules/.bin/rimraf dist && ./node_modules/.bin/tsc -p tsconfig.prod.json",
-    "test": "node_modules/.bin/jest --coverage",
+    "build": "rimraf dist && tsc -p tsconfig.prod.json",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
     "cz": "git-cz --disable-emoji"
   },
   "repository": {
@@ -34,16 +36,18 @@
     "json"
   ],
   "dependencies": {
-    "core-types": "^2.0.1",
+    "core-types": "^3.0.0",
     "typescript": "^5.0.2"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.20.2",
+    "@babel/preset-typescript": "^7.21.0",
     "@types/jest": "^29.5.0",
     "cz-conventional-changelog": "^3.3.0",
     "git-cz": "^4.9.0",
     "jest": "^29.5.0",
     "rimraf": "^4.4.0",
-    "ts-jest": "^29.0.5",
+    "ts-jest-resolver": "^2.0.0",
     "ts-node": "^10.9.1"
   },
   "config": {
@@ -52,16 +56,22 @@
     }
   },
   "jest": {
-    "preset": "ts-jest",
-    "testEnvironment": "node",
-    "coveragePathIgnorePatterns": [
-      "/node_modules/",
-      "/__snapshots__/"
+    "resolver": "ts-jest-resolver",
+    "extensionsToTreatAsEsm": [
+      ".ts"
     ],
+    "testEnvironment": "node",
     "coverageReporters": [
       "lcov",
       "text",
       "html"
+    ],
+    "collectCoverageFrom": [
+      "<rootDir>/lib/**"
+    ],
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "/__snapshots__/"
     ]
   },
   "packageManager": "yarn@3.2.4"

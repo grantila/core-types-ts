@@ -1,11 +1,13 @@
-import * as ts from 'typescript'
-import { CoreTypeAnnotations, mergeAnnotations } from 'core-types'
+import { type CoreTypeAnnotations, mergeAnnotations } from 'core-types'
+
+import { ts, tst } from './ts.js'
+
 
 interface JSDocContainer {
-	jsDoc: Array< ts.JSDoc >;
+	jsDoc: Array< tst.JSDoc >;
 }
 
-function extractDescription( text: string | undefined ): CoreTypeAnnotations
+function extractDescription( text: string | undefined ): CoreTypeAnnotations
 {
 	if ( !text )
 		return { };
@@ -13,9 +15,9 @@ function extractDescription( text: string | undefined ): CoreTypeAnnotations
 	return { description: text };
 }
 
-function extractTitle( node: ts.Node ): CoreTypeAnnotations
+function extractTitle( node: tst.Node ): CoreTypeAnnotations
 {
-	const hasParentWhileUnnamed = ( node: ts.Node ) =>
+	const hasParentWhileUnnamed = ( node: tst.Node ) =>
 		node.parent &&
 		(
 			ts.isArrayTypeNode( node.parent )
@@ -29,7 +31,7 @@ function extractTitle( node: ts.Node ): CoreTypeAnnotations
 			ts.isUnionTypeNode( node.parent )
 		);
 
-	const recurseTypeChain = ( node: ts.Node, child: ts.Node | undefined )
+	const recurseTypeChain = ( node: tst.Node, child: tst.Node | undefined )
 	: Array< string > =>
 	{
 		if ( !node )
@@ -94,7 +96,7 @@ function extractTitle( node: ts.Node ): CoreTypeAnnotations
 }
 
 function stringifyDoc(
-	text: undefined | string | ts.NodeArray< ts.JSDocComment >
+	text: undefined | string | tst.NodeArray< tst.JSDocComment >
 )
 : string | undefined
 {
@@ -104,14 +106,14 @@ function stringifyDoc(
 	return text.map( ( { text } ) => text ).join( ' ' );
 }
 
-function extractTags( tags: ReadonlyArray< ts.JSDocTag > ): CoreTypeAnnotations
+function extractTags( tags: ReadonlyArray< tst.JSDocTag > ): CoreTypeAnnotations
 {
 	const descriptions: Array< string > = [ ];
 	const examples: Array< string > = [ ];
 	const _default: Array< string > = [ ];
 	const see: Array< string > = [ ];
 
-	const extractSee = ( tag: ts.JSDocSeeTag ) =>
+	const extractSee = ( tag: tst.JSDocSeeTag ) =>
 		( tag.name ? ( tag.name?.getText( ) + ' ' ) : '' ) +
 		stringifyDoc( tag.comment )?.trim( ) ?? '';
 
@@ -125,7 +127,7 @@ function extractTags( tags: ReadonlyArray< ts.JSDocTag > ): CoreTypeAnnotations
 		else if ( tag.tagName.text === 'default' )
 			_default.push( stringifyDoc( tag.comment )?.trim( ) ?? '' );
 		else if ( tag.tagName.text === 'see' )
-			see.push( extractSee( tag as ts.JSDocSeeTag ) );
+			see.push( extractSee( tag as tst.JSDocSeeTag ) );
 		else
 		{
 			const text = stringifyDoc( tag.comment )?.trim( ) ?? '';
@@ -151,7 +153,7 @@ export interface DecorateNodeOptions {
 	includeJsDoc?: boolean;
 }
 
-export function decorateNode( node: ts.Node, options?: DecorateNodeOptions )
+export function decorateNode( node: tst.Node, options?: DecorateNodeOptions )
 : CoreTypeAnnotations
 {
 	const { includeJsDoc = true } = options ?? { };

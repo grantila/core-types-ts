@@ -1,4 +1,4 @@
-import { WarnFunction } from 'core-types'
+import type { WarnFunction } from 'core-types'
 
 
 export interface ToTsOptions

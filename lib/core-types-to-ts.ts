@@ -1,29 +1,29 @@
 import {
-	NodeDocument,
-	NodeType,
-	AndType,
-	OrType,
-	PrimitiveType,
+	type AndType,
+	type ArrayType,
+	type ConversionResult,
+	type CoreTypesErrorMeta,
+	type NamedType,
+	type NodeDocument,
+	type NodeType,
+	type ObjectType,
+	type OrType,
+	type PrimitiveType,
+	type RefType,
+	type TupleType,
 	isPrimitiveType,
-	RefType,
-	ObjectType,
-	ArrayType,
-	TupleType,
-	CoreTypesErrorMeta,
-	ConversionResult,
 	UnsupportedError,
-	NamedType,
-} from "core-types"
-import * as ts from 'typescript'
+} from 'core-types'
 
+import { ts, tst } from './ts.js'
 import {
+	createCodeHeader,
+	generateCode,
 	safeName,
 	tsUnknownTypeAnnotation,
 	wrapAnnotations,
-	generateCode,
-	createCodeHeader,
-} from "./ts-helpers"
-import { ToTsOptions } from "./types"
+} from './ts-helpers.js'
+import type { ToTsOptions } from './types.js'
 
 
 const { factory } = ts;
@@ -106,7 +106,7 @@ export function convertSingleCoreTypeToTypeScriptAst(
 	opts: Pick< ToTsOptions, 'useUnknown' | 'declaration' | 'namespaces' > =
 		{ }
 )
-: { declaration: ts.Declaration; namespaceList: string[ ]; }
+: { declaration: tst.Declaration; namespaceList: string[ ]; }
 {
 	const {
 		useUnknown = false,
@@ -123,7 +123,7 @@ export function convertSingleCoreTypeToTypeScriptAst(
 
 	const ret = tsType( ctx, node );
 
-	const doExport = ( tsNode: ts.Declaration ) =>
+	const doExport = ( tsNode: tst.Declaration ) =>
 		wrapAnnotations( tsNode, node );
 
 	const typeDeclaration =
@@ -166,7 +166,7 @@ function createExportModifier( declaration: boolean )
 	);
 }
 
-function declareType( declaration: boolean, name: string, node: ts.TypeNode )
+function declareType( declaration: boolean, name: string, node: tst.TypeNode )
 {
 	return factory.createTypeAliasDeclaration(
 		createExportModifier( declaration ), // modifiers
@@ -179,7 +179,7 @@ function declareType( declaration: boolean, name: string, node: ts.TypeNode )
 function declareInterface(
 	declaration: boolean,
 	name: string,
-	nodes: Array< ts.TypeElement >
+	nodes: Array< tst.TypeElement >
 )
 {
 	return factory.createInterfaceDeclaration(
@@ -193,16 +193,16 @@ function declareInterface(
 
 interface TsTypeReturnAsObject {
 	type: 'object';
-	node: ts.TypeLiteralNode;
-	properties: Array< ts.TypeElement >;
+	node: tst.TypeLiteralNode;
+	properties: Array< tst.TypeElement >;
 }
 interface TsTypeReturnAsFlowType {
 	type: 'flow-type';
-	node: ts.TypeNode;
+	node: tst.TypeNode;
 }
 type TsTypeReturn = TsTypeReturnAsObject | TsTypeReturnAsFlowType;
 
-function tsTypeUnion( ctx: Context, node: OrType ): ts.TypeNode
+function tsTypeUnion( ctx: Context, node: OrType ): tst.TypeNode
 {
 	return factory.createUnionTypeNode(
 		node.or.map( elem =>
@@ -211,7 +211,7 @@ function tsTypeUnion( ctx: Context, node: OrType ): ts.TypeNode
 	)
 }
 
-function tsTypeIntersection( ctx: Context, node: AndType ): ts.TypeNode
+function tsTypeIntersection( ctx: Context, node: AndType ): tst.TypeNode
 {
 	return factory.createIntersectionTypeNode(
 		node.and.map( elem =>
@@ -220,7 +220,7 @@ function tsTypeIntersection( ctx: Context, node: AndType ): ts.TypeNode
 	)
 }
 
-function tsTypeAndOrSchema( ctx: Context, node: NodeType ): ts.TypeNode
+function tsTypeAndOrSchema( ctx: Context, node: NodeType ): tst.TypeNode
 {
 	if ( node.type === 'and' || node.type === 'or' )
 		return tsTypeAndOr( ctx, node );
@@ -228,7 +228,7 @@ function tsTypeAndOrSchema( ctx: Context, node: NodeType ): ts.TypeNode
 		return tsType( ctx, node ).node;
 }
 
-function tsTypeAndOr( ctx: Context, andOr: AndType | OrType ): ts.TypeNode
+function tsTypeAndOr( ctx: Context, andOr: AndType | OrType ): tst.TypeNode
 {
 	if ( andOr.type === 'and' )
 		return tsTypeIntersection( ctx, andOr );
@@ -236,7 +236,7 @@ function tsTypeAndOr( ctx: Context, andOr: AndType | OrType ): ts.TypeNode
 		return tsTypeUnion( ctx, andOr );
 }
 
-function tsAny( ctx: Context ): ts.TypeNode
+function tsAny( ctx: Context ): tst.TypeNode
 {
 	return ctx.useUnknown
 		? tsUnknownTypeAnnotation( )
@@ -289,7 +289,7 @@ function tsType( ctx: Context, node: NodeType ): TsTypeReturn
 	throwUnsupported( `Type ${(node as any).type} not supported`, node );
 }
 
-function tsNullType( ): ts.TypeNode
+function tsNullType( ): tst.TypeNode
 {
 	return factory.createLiteralTypeNode(
 		factory.createToken( ts.SyntaxKind.NullKeyword )
@@ -303,7 +303,7 @@ const primitiveTypeMap = {
 	boolean: ts.SyntaxKind.BooleanKeyword,
 } as const;
 
-function tsPrimitiveType( node: PrimitiveType ): ts.TypeNode
+function tsPrimitiveType( node: PrimitiveType ): tst.TypeNode
 {
 	const { type } = node;
 	if ( type === "null" )
@@ -316,7 +316,7 @@ function tsPrimitiveType( node: PrimitiveType ): ts.TypeNode
 	throwUnsupported( `Invalid primitive type: ${type}`, node );
 }
 
-function tsConstType( ctx: Context, node: NodeType, value: any ): ts.TypeNode
+function tsConstType( ctx: Context, node: NodeType, value: any ): tst.TypeNode
 {
 	return value === "null"
 		? tsNullType( )
@@ -345,7 +345,7 @@ function tsArrayConstExpression< T >(
 	node: NodeType,
 	value: Array< T >
 )
-: ts.TypeNode
+: tst.TypeNode
 {
 	return factory.createTupleTypeNode(
 		value.map( elem => tsConstType( ctx, node, elem ) )
@@ -353,7 +353,7 @@ function tsArrayConstExpression< T >(
 }
 
 function createAdditionalMembers( ctx: Context, type: true | NodeType )
-: ts.IndexSignatureDeclaration
+: tst.IndexSignatureDeclaration
 {
 	if ( type === true )
 		return createAdditionalMembers( ctx, { type: 'any' } );
@@ -390,7 +390,7 @@ function tsObjectType( ctx: Context, node: ObjectType )
 		? undefined
 		: factory.createToken( ts.SyntaxKind.QuestionToken );
 
-	const propertyNodes: Array< ts.TypeElement > = [
+	const propertyNodes: Array< tst.TypeElement > = [
 		...Object
 			.keys( properties )
 			.map( name => ( { name, ...properties[ name ] } ) )
@@ -413,14 +413,14 @@ function tsObjectType( ctx: Context, node: ObjectType )
 	return { properties: propertyNodes, node: objectAsNode };
 }
 
-function tsSpreadType( ctx: Context, node: NodeType ): ts.TypeNode
+function tsSpreadType( ctx: Context, node: NodeType ): tst.TypeNode
 {
 	return factory.createArrayTypeNode(
 		factory.createRestTypeNode( tsType( ctx, node ).node )
 	);
 }
 
-function tsArrayType( ctx: Context, node: ArrayType | TupleType ): ts.TypeNode
+function tsArrayType( ctx: Context, node: ArrayType | TupleType ): tst.TypeNode
 {
 	// TODO: Add support for minItems (making rest arguments optional)
 	// TODO: Maybe add support for maxItems (turning an array into a tuple of
@@ -444,7 +444,7 @@ function tsArrayType( ctx: Context, node: ArrayType | TupleType ): ts.TypeNode
 		);
 }
 
-function tsRefType( node: RefType ): ts.TypeNode
+function tsRefType( node: RefType ): tst.TypeNode
 {
 	return factory.createTypeReferenceNode( node.ref );
 }

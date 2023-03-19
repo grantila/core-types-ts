@@ -1,5 +1,8 @@
-import { NamedType, simplify } from 'core-types';
-import { convertTypeScriptToCoreTypes } from './ts-to-core-types'
+import { jest } from '@jest/globals'
+
+import { type NamedType, simplify } from 'core-types'
+
+import { convertTypeScriptToCoreTypes } from './ts-to-core-types.js'
 
 
 const equal = ( a: Array< NamedType >, b: Array< NamedType > ) =>

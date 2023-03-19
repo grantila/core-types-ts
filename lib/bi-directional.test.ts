@@ -1,6 +1,7 @@
-import { NamedType, NodeDocument } from 'core-types';
-import { convertCoreTypesToTypeScript } from './core-types-to-ts'
-import { convertTypeScriptToCoreTypes } from './ts-to-core-types'
+import type { NamedType, NodeDocument } from 'core-types'
+
+import { convertCoreTypesToTypeScript } from './core-types-to-ts.js'
+import { convertTypeScriptToCoreTypes } from './ts-to-core-types.js'
 
 
 const wrapDocument = ( types: Array< NamedType > ): NodeDocument =>
