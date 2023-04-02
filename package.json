@@ -36,8 +36,8 @@
     "json"
   ],
   "dependencies": {
-    "core-types": "^3.0.0",
-    "typescript": "^5.0.2"
+    "core-types": "^3.1.0",
+    "typescript": "^5.0.3"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.21.4",
