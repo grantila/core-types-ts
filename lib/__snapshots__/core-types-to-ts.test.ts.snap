@@ -1,5 +1,64 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`core-types-to-ts and-type as empty interface with 1 heritage 1`] = `
+"export interface foo extends bar {
+}
+
+export interface bar {
+    b: number;
+}
+"
+`;
+
+exports[`core-types-to-ts and-type as empty interface with 2 heritage 1`] = `
+"export interface foo extends bar, baz {
+}
+
+export interface bar {
+    b: number;
+}
+
+export interface baz {
+    z: boolean;
+}
+"
+`;
+
+exports[`core-types-to-ts and-type as non-empty interface with 1 heritage 1`] = `
+"export interface foo extends bar {
+    f: string;
+}
+
+export interface bar {
+    b: number;
+}
+"
+`;
+
+exports[`core-types-to-ts and-type as non-empty interface with 2 heritage 1`] = `
+"export interface foo extends bar, baz {
+    f: string;
+}
+
+export interface bar {
+    b: number;
+}
+
+export interface baz {
+    z: boolean;
+}
+"
+`;
+
+exports[`core-types-to-ts and-type that cannot be an interface because non-object ref 1`] = `
+"export type foo = {
+    f?: string;
+} & bar;
+
+export type bar = null;
+"
+`;
+
 exports[`core-types-to-ts complex type 1`] = `
 {
   "convertedTypes": [

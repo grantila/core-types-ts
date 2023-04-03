@@ -472,7 +472,7 @@ describe( "non-exported types", ( ) =>
 				type: 'object',
 				properties: {
 					prop: {
-						node: { type: 'ref', ref: 'T', title: 'T2.prop' },
+						node: { type: 'any', title: 'T2.prop' },
 						required: true,
 					},
 				},
@@ -1342,7 +1342,7 @@ describe( "partial", ( ) =>
 	} );
 } );
 
-describe( "comples partial/pick/omit", ( ) =>
+describe( "complex partial/pick/omit", ( ) =>
 {
 	it( "handle complex deep case", ( ) =>
 	{
@@ -1386,6 +1386,391 @@ describe( "comples partial/pick/omit", ( ) =>
 							title: 'Foo.d',
 						},
 						required: false,
+					},
+				},
+				additionalProperties: false,
+			},
+		] );
+	} );
+} );
+
+describe( "extended interfaces", ( ) =>
+{
+	it( "handle extending one interface (ignore)", ( ) =>
+	{
+		const coreTypes = convertTypeScriptToCoreTypes(
+			`
+				interface A {
+					a: 'a';
+				}
+				export interface B extends A {
+					b: 'b';
+				}
+			`,
+			{
+				nonExported: 'ignore'
+			}
+		).data.types;
+
+		equal( coreTypes, [
+			{
+				name: 'B',
+				title: 'B',
+				type: 'object',
+				properties: {
+					b: {
+						node: {
+							type: 'string',
+							const: 'b',
+							title: 'B.b',
+						},
+						required: true,
+					},
+				},
+				additionalProperties: false,
+			},
+		] );
+	} );
+
+	it( "handle extending one interface (inline)", ( ) =>
+	{
+		const coreTypes = convertTypeScriptToCoreTypes(
+			`
+				interface A {
+					a: 'a';
+				}
+				export interface B extends A {
+					b: 'b';
+				}
+			`,
+			{
+				nonExported: 'inline'
+			}
+		).data.types;
+
+		equal( coreTypes, [
+			{
+				name: 'B',
+				title: 'B',
+				type: 'and',
+				and: [
+					{
+						name: 'A',
+						title: 'A',
+						type: 'object',
+						properties: {
+							a: {
+								node: {
+									type: 'string',
+									const: 'a',
+									title: 'A.a',
+								},
+								required: true,
+							},
+						},
+						additionalProperties: false,
+					},
+					{
+						type: 'object',
+						properties: {
+							b: {
+								node: {
+									type: 'string',
+									const: 'b',
+									title: 'B.b',
+								},
+								required: true,
+							},
+						},
+						additionalProperties: false,
+					},
+				],
+			},
+		] );
+	} );
+
+	it( "handle extending one interface (include-if-referenced)", ( ) =>
+	{
+		const coreTypes = convertTypeScriptToCoreTypes(
+			`
+				interface A {
+					a: 'a';
+				}
+				export interface B extends A {
+					b: 'b';
+				}
+			`,
+			{
+				nonExported: 'include-if-referenced'
+			}
+		).data.types;
+
+		equal( coreTypes, [
+			{
+				name: 'B',
+				title: 'B',
+				type: 'and',
+				and: [
+					{
+						type: 'ref',
+						ref: 'A',
+					},
+					{
+						type: 'object',
+						properties: {
+							b: {
+								node: {
+									type: 'string',
+									const: 'b',
+									title: 'B.b',
+								},
+								required: true,
+							},
+						},
+						additionalProperties: false,
+					},
+				],
+			},
+			{
+				name: 'A',
+				title: 'A',
+				type: 'object',
+				properties: {
+					a: {
+						node: {
+							type: 'string',
+							const: 'a',
+							title: 'A.a',
+						},
+						required: true,
+					},
+				},
+				additionalProperties: false,
+			},
+		] );
+	} );
+
+	it( "handle extending two interfaces (ignore)", ( ) =>
+	{
+		const coreTypes = convertTypeScriptToCoreTypes(
+			`
+				interface A {
+					a: 'a';
+				}
+				export interface B {
+					b: 'b';
+				}
+				export interface C extends A, B {
+					c: 'c';
+				}
+			`,
+			{
+				nonExported: 'ignore'
+			}
+		).data.types;
+
+		equal( coreTypes, [
+			{
+				name: 'B',
+				title: 'B',
+				type: 'object',
+				properties: {
+					b: {
+						node: {
+							type: 'string',
+							const: 'b',
+							title: 'B.b',
+						},
+						required: true,
+					},
+				},
+				additionalProperties: false,
+			},
+			{
+				name: 'C',
+				title: 'C',
+				type: 'and',
+				and: [
+					{
+						type: 'ref',
+						ref: 'B',
+					},
+					{
+						type: 'object',
+						properties: {
+							c: {
+								node: {
+									type: 'string',
+									const: 'c',
+									title: 'C.c',
+								},
+								required: true,
+							},
+						},
+						additionalProperties: false,
+					},
+				],
+			},
+		] );
+	} );
+
+	it( "handle extending two interfaces (inline)", ( ) =>
+	{
+		const coreTypes = convertTypeScriptToCoreTypes(
+			`
+				interface A {
+					a: 'a';
+				}
+				export interface B {
+					b: 'b';
+				}
+				export interface C extends A, B {
+					c: 'c';
+				}
+			`,
+			{
+				nonExported: 'inline'
+			}
+		).data.types;
+
+		equal( coreTypes, [
+			{
+				name: 'B',
+				title: 'B',
+				type: 'object',
+				properties: {
+					b: {
+						node: {
+							type: 'string',
+							const: 'b',
+							title: 'B.b',
+						},
+						required: true,
+					},
+				},
+				additionalProperties: false,
+			},
+			{
+				name: 'C',
+				title: 'C',
+				type: 'and',
+				and: [
+					{
+						name: 'A',
+						title: 'A',
+						type: 'object',
+						properties: {
+							a: {
+								node: {
+									type: 'string',
+									const: 'a',
+									title: 'A.a',
+								},
+								required: true,
+							},
+						},
+						additionalProperties: false,
+					},
+					{
+						type: 'ref',
+						ref: 'B',
+					},
+					{
+						type: 'object',
+						properties: {
+							c: {
+								node: {
+									type: 'string',
+									const: 'c',
+									title: 'C.c',
+								},
+								required: true,
+							},
+						},
+						additionalProperties: false,
+					},
+				],
+			},
+		] );
+	} );
+
+	it( "handle extending two interfaces (include-if-referenced)", ( ) =>
+	{
+		const coreTypes = convertTypeScriptToCoreTypes(
+			`
+				interface A {
+					a: 'a';
+				}
+				export interface B {
+					b: 'b';
+				}
+				export interface C extends A, B {
+					c: 'c';
+				}
+			`,
+			{
+				nonExported: 'include-if-referenced'
+			}
+		).data.types;
+
+		equal( coreTypes, [
+			{
+				name: 'B',
+				title: 'B',
+				type: 'object',
+				properties: {
+					b: {
+						node: {
+							type: 'string',
+							const: 'b',
+							title: 'B.b',
+						},
+						required: true,
+					},
+				},
+				additionalProperties: false,
+			},
+			{
+				name: 'C',
+				title: 'C',
+				type: 'and',
+				and: [
+					{
+						type: 'ref',
+						ref: 'A',
+					},
+					{
+						type: 'ref',
+						ref: 'B',
+					},
+					{
+						type: 'object',
+						properties: {
+							c: {
+								node: {
+									type: 'string',
+									const: 'c',
+									title: 'C.c',
+								},
+								required: true,
+							},
+						},
+						additionalProperties: false,
+					},
+				],
+			},
+			{
+				name: 'A',
+				title: 'A',
+				type: 'object',
+				properties: {
+					a: {
+						node: {
+							type: 'string',
+							const: 'a',
+							title: 'A.a',
+						},
+						required: true,
 					},
 				},
 				additionalProperties: false,

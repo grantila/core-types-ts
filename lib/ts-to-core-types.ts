@@ -41,6 +41,7 @@ interface Context
 	cyclicState: Set< string >;
 	getUnsupportedError( message: string, node: ts.Node ): UnsupportedError;
 	handleError( err: UnsupportedError ): undefined | never;
+	ensureNonCyclic( name: string, node: ts.Node ): void;
 }
 
 const defaultWarn = ( sourceCode: string ): WarnFunction =>
@@ -262,7 +263,19 @@ export function convertTypeScriptToCoreTypes(
 				throw err;
 
 			return undefined;
-		}
+		},
+		ensureNonCyclic( name: string, node: ts.Node )
+		{
+			if ( ctx.cyclicState.has( name ) )
+				throw new MalformedTypeError(
+					`Cyclic type found when trying to inline type ${name}`,
+					{
+						blob: node,
+						loc: toLocation( node ),
+					}
+				);
+			ctx.cyclicState.add( name );
+		},
 	};
 
 	if ( ctx.options.nonExported === 'fail' )
@@ -352,6 +365,29 @@ function fromTsTopLevelNode( node: TopLevelDeclaration, ctx: Context )
 	}
 	else if ( ts.isInterfaceDeclaration( node ) )
 	{
+		const heritage = getInterfaceHeritage( node );
+
+		// This is an extended interface, which we turn into an and-type of the
+		// object itself and the refs it extends.
+		// If no such ref was found, we keep it as an interface.
+		const inherited: Array< NodeType > = heritage
+			.map( ref => getRefType( node, ref, ctx ) )
+			.filter( isNonNullable );
+
+		if ( inherited.length > 0 )
+			return {
+				name: node.name.getText( ),
+				type: 'and',
+				and: [
+					...inherited,
+					{
+						type: 'object',
+						...fromTsObjectMembers( node, ctx ),
+					},
+				],
+				...decorateNode( node ),
+			};
+
 		return {
 			name: node.name.getText( ),
 			type: 'object',
@@ -361,6 +397,15 @@ function fromTsTopLevelNode( node: TopLevelDeclaration, ctx: Context )
 	}
 	else
 		throw new Error( "Internal error" );
+}
+
+function getInterfaceHeritage( node: ts.InterfaceDeclaration ): Array< string >
+{
+	const heritage = node.heritageClauses ?? [ ];
+	if ( heritage.length === 0 )
+		return [ ];
+
+	return heritage[ 0 ].types.map( type => type.getText( ) );
 }
 
 function isOptionalProperty( node: ts.PropertySignature )
@@ -525,19 +570,6 @@ function fromTsTypeNode(
 
 		const ref = node.typeName.text;
 
-		const ensureNonCyclic = ( name: string ) =>
-		{
-			if ( ctx.cyclicState.has( name ) )
-				throw new MalformedTypeError(
-					`Cyclic type found when trying to inline type ${name}`,
-					{
-						blob: node,
-						loc: toLocation( node ),
-					}
-				);
-			ctx.cyclicState.add( name );
-		};
-
 		// TODO: Make this able to go into named type.
 		// It currently understands:
 		// 'foo' | 'bar'
@@ -614,7 +646,7 @@ function fromTsTypeNode(
 						node
 					) );
 
-				ensureNonCyclic( refName );
+				ctx.ensureNonCyclic( refName, node );
 				const members = fromTsObjectMembers( reference.declaration, ctx );
 
 				return { members, secondNames };
@@ -719,19 +751,12 @@ function fromTsTypeNode(
 			return handleGeneric( node, ctx );
 		// TODO: Handle (reconstruct) generics
 
-		const typeInfo = ctx.typeMap.get( ref );
-		if ( typeInfo && !typeInfo.exported && !peekOnly )
-		{
-			if ( ctx.options.nonExported === 'include-if-referenced' )
-				ctx.includeExtra.add( ref );
-			else if ( ctx.options.nonExported === 'inline' )
-			{
-				ensureNonCyclic( ref );
-				return fromTsTopLevelNode( typeInfo.declaration, ctx );
-			}
-		}
+		if ( peekOnly )
+			return { type: 'ref', ref, ...decorateNode( node ) };
 
-		return { type: 'ref', ref, ...decorateNode( node ) };
+		const refNode = getRefType( node, ref, ctx );
+
+		return !refNode ? undefined : { ...refNode, ...decorateNode( node ) };
 	}
 
 	else if ( ts.isTupleTypeNode( node ) )
@@ -814,6 +839,29 @@ function fromTsTypeNode(
 			node
 		) );
 	}
+}
+
+function getRefType( node: ts.Node, ref: string, ctx: Context )
+: NodeType | undefined
+{
+	const typeInfo = ctx.typeMap.get( ref );
+	if ( typeInfo && !typeInfo.exported )
+	{
+		if ( ctx.options.nonExported === 'include-if-referenced' )
+		{
+			ctx.includeExtra.add( ref );
+			return { type: 'ref', ref };
+		}
+		else if ( ctx.options.nonExported === 'inline' )
+		{
+			ctx.ensureNonCyclic( ref, node );
+			return fromTsTopLevelNode( typeInfo.declaration, ctx );
+		}
+	}
+	else if ( typeInfo )
+		return { type: 'ref', ref };
+	else
+		return undefined;
 }
 
 function fromTsTuple( node: ts.TupleTypeNode, ctx: Context )

@@ -34,6 +34,7 @@ const createdByUrl = 'https://github.com/grantila/core-types-ts';
 interface Context
 {
 	useUnknown: boolean;
+	rootTypes: Array< NamedType >;
 }
 
 function throwUnsupported(
@@ -74,7 +75,11 @@ export function convertCoreTypesToTypeScript(
 		{
 			const { name } = node;
 
-			const tsNode = convertSingleCoreTypeToTypeScriptAst( node, opts );
+			const ctx: Omit< Context, 'useUnknown' > = {
+				rootTypes: types,
+			};
+
+			const tsNode = convertSingleCoreType( node, opts, ctx );
 
 			convertedTypes.push( name );
 
@@ -108,6 +113,20 @@ export function convertSingleCoreTypeToTypeScriptAst(
 )
 : { declaration: ts.Declaration; namespaceList: string[ ]; }
 {
+	const ctx: Omit< Context, 'useUnknown' > = {
+		rootTypes: [ ],
+	};
+
+	return convertSingleCoreType( node, opts, ctx );
+}
+
+export function convertSingleCoreType(
+	node: NamedType,
+	opts: Pick< ToTsOptions, 'useUnknown' | 'declaration' | 'namespaces' >,
+	partialCtx: Omit< Context, 'useUnknown' >
+)
+: { declaration: ts.Declaration; namespaceList: string[ ]; }
+{
 	const {
 		useUnknown = false,
 		declaration = false,
@@ -115,13 +134,14 @@ export function convertSingleCoreTypeToTypeScriptAst(
 	} = opts;
 
 	const ctx: Context = {
+		...partialCtx,
 		useUnknown,
 	};
 
 	const { name, namespaces: namespaceList } =
 		makeNameAndNamespace( node.name, namespaces );
 
-	const ret = tsType( ctx, node );
+	const ret = tsType( ctx, node, true );
 
 	const doExport = ( tsNode: ts.Declaration ) =>
 		wrapAnnotations( tsNode, node );
@@ -129,7 +149,7 @@ export function convertSingleCoreTypeToTypeScriptAst(
 	const typeDeclaration =
 		ret.type === 'flow-type'
 		? declareType( declaration, name, ret.node )
-		: declareInterface( declaration, name, ret.properties );
+		: declareInterface( declaration, name, ret.properties, ret.inherits );
 
 	return {
 		declaration: doExport( typeDeclaration ),
@@ -179,14 +199,30 @@ function declareType( declaration: boolean, name: string, node: ts.TypeNode )
 function declareInterface(
 	declaration: boolean,
 	name: string,
-	nodes: Array< ts.TypeElement >
+	nodes: Array< ts.TypeElement >,
+	inherits: Array< string >
 )
 {
+	const heritage: ts.HeritageClause[] | undefined =
+		inherits.length === 0
+		? undefined
+		: [
+			factory.createHeritageClause(
+				ts.SyntaxKind.ExtendsKeyword,
+				inherits.map( name =>
+					factory.createExpressionWithTypeArguments(
+						factory.createIdentifier( name ),
+						undefined // type arguments
+					)
+				)
+			)
+		];
+
 	return factory.createInterfaceDeclaration(
 			createExportModifier( declaration ), // modifiers
 			factory.createIdentifier( name ),
 			undefined, // type parameters
-			undefined, // heritage
+			heritage,
 			nodes
 		);
 }
@@ -195,6 +231,7 @@ interface TsTypeReturnAsObject {
 	type: 'object';
 	node: ts.TypeLiteralNode;
 	properties: Array< ts.TypeElement >;
+	inherits: Array< string >;
 }
 interface TsTypeReturnAsFlowType {
 	type: 'flow-type';
@@ -243,8 +280,11 @@ function tsAny( ctx: Context ): ts.TypeNode
 		: factory.createKeywordTypeNode( ts.SyntaxKind.AnyKeyword );
 }
 
-function tsType( ctx: Context, node: NodeType ): TsTypeReturn
+function tsType( ctx: Context, node: NodeType, topLevel = false ): TsTypeReturn
 {
+	if ( topLevel && node.type === 'and' && isObjectWithHeritage( ctx, node ) )
+		return { type: 'object', ...tsObjectTypeWithWithHeritage( ctx, node ) };
+
 	if ( node.type === 'and' || node.type === 'or' )
 		return { type: 'flow-type', node: tsTypeAndOr( ctx, node ) };
 
@@ -335,7 +375,7 @@ function tsConstType( ctx: Context, node: NodeType, value: any ): ts.TypeNode
 				throwUnsupported(
 					`Invalid const value: "${value}"`,
 					node,
-					{ blob: value }
+					{ blob: value }
 				);
 			} )( );
 }
@@ -410,7 +450,57 @@ function tsObjectType( ctx: Context, node: ObjectType )
 
 	const objectAsNode = factory.createTypeLiteralNode( propertyNodes );
 
-	return { properties: propertyNodes, node: objectAsNode };
+	return { properties: propertyNodes, node: objectAsNode, inherits: [ ] };
+}
+
+// Extracts objects and refs from an and-type.
+// Only refs that themselves are objects.
+function getObjectsAndRefs( ctx: Context, node: AndType )
+{
+	const objects = node.and.filter(
+		( node ): node is ObjectType => node.type === 'object'
+	);
+	const refs = node.and.filter(
+		( node ): node is RefType =>
+			node.type === 'ref'
+			&&
+			ctx.rootTypes.some( rootNode =>
+				rootNode.name === node.ref
+				&&
+				rootNode.type === 'object'
+			)
+	);
+
+	return { objects, refs };
+}
+
+function isObjectWithHeritage( ctx: Context, node: AndType ): boolean
+{
+	const { objects, refs } = getObjectsAndRefs( ctx, node );
+
+	if ( objects.length !== 0 && objects.length !== 1 )
+		// Must have zero or one object with properties, not multiple
+		return false;
+
+	// And-type contains only refs and (maybe) an object, so it's an interface
+	return objects.length + refs.length === node.and.length;
+}
+
+function tsObjectTypeWithWithHeritage( ctx: Context, node: AndType )
+: Omit< TsTypeReturnAsObject, 'type' >
+{
+	const { objects, refs } = getObjectsAndRefs( ctx, node );
+
+	const ret: ReturnType< typeof tsObjectType > =
+		objects.length === 0
+		? {
+			properties: [ ],
+			node: factory.createTypeLiteralNode( [ ] ),
+			inherits: [ ],
+		}
+		: tsObjectType( ctx, objects[ 0 ] )
+
+	return { ...ret, inherits: refs.map( node => node.ref ) };
 }
 
 function tsSpreadType( ctx: Context, node: NodeType ): ts.TypeNode

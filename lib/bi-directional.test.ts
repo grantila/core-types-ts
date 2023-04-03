@@ -178,4 +178,47 @@ export type Bak = 17;
 `
 		);
 	} );
+
+	it( "handle extending two interfaces (include-if-referenced)", ( ) =>
+	{
+		const coreTypes = convertTypeScriptToCoreTypes(
+			`
+				interface A {
+					a: 'a';
+				}
+				export interface B {
+					b: 'b';
+				}
+				export interface C extends A, B {
+					c: 'c';
+				}
+			`,
+			{
+				nonExported: 'include-if-referenced'
+			}
+		);
+
+		const ts = convertCoreTypesToTypeScript(
+			coreTypes.data,
+			{
+				noDescriptiveHeader: true,
+				noDisableLintHeader: true,
+			}
+		);
+
+		expect( ts.data ).toBe(
+`export interface B {
+    b: "b";
+}
+
+export interface C extends A, B {
+    c: "c";
+}
+
+export interface A {
+    a: "a";
+}
+`
+		);
+	} );
 } );

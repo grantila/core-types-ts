@@ -280,4 +280,195 @@ describe( "core-types-to-ts", ( ) =>
 
 		expect( ts.data ).toMatchSnapshot( );
 	} );
+
+	it( "and-type that cannot be an interface because non-object ref", ( ) =>
+	{
+		const ts = convertCoreTypesToTypeScript( wrapDocument( [
+			{
+				name: 'foo',
+				type: 'and',
+				and: [
+					{
+						type: 'object',
+						properties: {
+							f: { required: false, node: { type: 'string' } },
+						},
+						additionalProperties: false,
+					},
+					{
+						type: 'ref',
+						ref: 'bar',
+					},
+				],
+			},
+			{
+				name: 'bar',
+				type: 'null',
+			},
+		] ),
+		{ noDescriptiveHeader: true, noDisableLintHeader: true }
+		);
+
+		expect( ts.data ).toMatchSnapshot( );
+	} );
+
+	it( "and-type as empty interface with 1 heritage", ( ) =>
+	{
+		const ts = convertCoreTypesToTypeScript( wrapDocument( [
+			{
+				name: 'foo',
+				type: 'and',
+				and: [
+					{
+						type: 'object',
+						properties: { },
+						additionalProperties: false,
+					},
+					{
+						type: 'ref',
+						ref: 'bar',
+					},
+				],
+			},
+			{
+				name: 'bar',
+				type: 'object',
+				properties: {
+					b: { required: true, node: { type: 'number' } },
+				},
+				additionalProperties: false,
+			},
+		] ),
+		{ noDescriptiveHeader: true, noDisableLintHeader: true }
+		);
+
+		expect( ts.data ).toMatchSnapshot( );
+	} );
+
+	it( "and-type as empty interface with 2 heritage", ( ) =>
+	{
+		const ts = convertCoreTypesToTypeScript( wrapDocument( [
+			{
+				name: 'foo',
+				type: 'and',
+				and: [
+					{
+						type: 'object',
+						properties: { },
+						additionalProperties: false,
+					},
+					{
+						type: 'ref',
+						ref: 'bar',
+					},
+					{
+						type: 'ref',
+						ref: 'baz',
+					},
+				],
+			},
+			{
+				name: 'bar',
+				type: 'object',
+				properties: {
+					b: { required: true, node: { type: 'number' } },
+				},
+				additionalProperties: false,
+			},
+			{
+				name: 'baz',
+				type: 'object',
+				properties: {
+					z: { required: true, node: { type: 'boolean' } },
+				},
+				additionalProperties: false,
+			},
+		] ),
+		{ noDescriptiveHeader: true, noDisableLintHeader: true }
+		);
+
+		expect( ts.data ).toMatchSnapshot( );
+	} );
+
+	it( "and-type as non-empty interface with 1 heritage", ( ) =>
+	{
+		const ts = convertCoreTypesToTypeScript( wrapDocument( [
+			{
+				name: 'foo',
+				type: 'and',
+				and: [
+					{
+						type: 'object',
+						properties: {
+							f: { required: true, node: { type: 'string' } },
+						},
+						additionalProperties: false,
+					},
+					{
+						type: 'ref',
+						ref: 'bar',
+					},
+				],
+			},
+			{
+				name: 'bar',
+				type: 'object',
+				properties: {
+					b: { required: true, node: { type: 'number' } },
+				},
+				additionalProperties: false,
+			},
+		] ),
+		{ noDescriptiveHeader: true, noDisableLintHeader: true }
+		);
+
+		expect( ts.data ).toMatchSnapshot( );
+	} );
+
+	it( "and-type as non-empty interface with 2 heritage", ( ) =>
+	{
+		const ts = convertCoreTypesToTypeScript( wrapDocument( [
+			{
+				name: 'foo',
+				type: 'and',
+				and: [
+					{
+						type: 'object',
+						properties: {
+							f: { required: true, node: { type: 'string' } },
+						},
+						additionalProperties: false,
+					},
+					{
+						type: 'ref',
+						ref: 'bar',
+					},
+					{
+						type: 'ref',
+						ref: 'baz',
+					},
+				],
+			},
+			{
+				name: 'bar',
+				type: 'object',
+				properties: {
+					b: { required: true, node: { type: 'number' } },
+				},
+				additionalProperties: false,
+			},
+			{
+				name: 'baz',
+				type: 'object',
+				properties: {
+					z: { required: true, node: { type: 'boolean' } },
+				},
+				additionalProperties: false,
+			},
+		] ),
+		{ noDescriptiveHeader: true, noDisableLintHeader: true }
+		);
+
+		expect( ts.data ).toMatchSnapshot( );
+	} );
 } );
