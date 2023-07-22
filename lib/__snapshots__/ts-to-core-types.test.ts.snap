@@ -1,0 +1,513 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Complex type definitions Complex types 1`] = `
+[
+  {
+    "additionalProperties": false,
+    "name": "EquipmentGroupsView",
+    "properties": {
+      "autoActivateHotSpares": {
+        "node": {
+          "title": "EquipmentGroupsView.autoActivateHotSpares",
+          "type": "boolean",
+        },
+        "required": false,
+      },
+      "createdAt": {
+        "node": {
+          "title": "EquipmentGroupsView.createdAt",
+          "type": "any",
+        },
+        "required": false,
+      },
+      "description": {
+        "node": {
+          "title": "EquipmentGroupsView.description",
+          "type": "string",
+        },
+        "required": false,
+      },
+      "id": {
+        "node": {
+          "title": "EquipmentGroupsView.id",
+          "type": "any",
+        },
+        "required": false,
+      },
+      "name": {
+        "node": {
+          "title": "EquipmentGroupsView.name",
+          "type": "string",
+        },
+        "required": false,
+      },
+      "notes": {
+        "node": {
+          "title": "EquipmentGroupsView.notes",
+          "type": "string",
+        },
+        "required": false,
+      },
+      "numHealthyThreshold": {
+        "node": {
+          "title": "EquipmentGroupsView.numHealthyThreshold",
+          "type": "number",
+        },
+        "required": false,
+      },
+      "parentId": {
+        "node": {
+          "title": "EquipmentGroupsView.parentId",
+          "type": "any",
+        },
+        "required": false,
+      },
+      "parentPath": {
+        "node": {
+          "title": "EquipmentGroupsView.parentPath",
+          "type": "string",
+        },
+        "required": false,
+      },
+      "updatedAt": {
+        "node": {
+          "title": "EquipmentGroupsView.updatedAt",
+          "type": "any",
+        },
+        "required": false,
+      },
+    },
+    "title": "EquipmentGroupsView",
+    "type": "object",
+  },
+  {
+    "and": [
+      {
+        "ref": "NewEquipmentGroupsView",
+        "type": "ref",
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "statusGroups": {
+            "node": {
+              "elementType": {
+                "title": "INewEquipmentGroupsView.statusGroups.[]",
+                "type": "string",
+              },
+              "title": "INewEquipmentGroupsView.statusGroups",
+              "type": "array",
+            },
+            "required": false,
+          },
+        },
+        "type": "object",
+      },
+    ],
+    "name": "INewEquipmentGroupsView",
+    "title": "INewEquipmentGroupsView",
+    "type": "and",
+  },
+  {
+    "additionalProperties": false,
+    "name": "INewEquipmentGroupsViewPartial",
+    "properties": {
+      "statusGroups": {
+        "node": {
+          "elementType": {
+            "title": "INewEquipmentGroupsView.statusGroups.[]",
+            "type": "string",
+          },
+          "title": "INewEquipmentGroupsView.statusGroups",
+          "type": "array",
+        },
+        "required": false,
+      },
+    },
+    "title": "INewEquipmentGroupsViewPartial",
+    "type": "object",
+  },
+  {
+    "additionalProperties": false,
+    "name": "NewEquipmentGroupsView",
+    "properties": {
+      "autoActivateHotSpares": {
+        "node": {
+          "title": "EquipmentGroupsView.autoActivateHotSpares",
+          "type": "boolean",
+        },
+        "required": false,
+      },
+      "description": {
+        "node": {
+          "title": "EquipmentGroupsView.description",
+          "type": "string",
+        },
+        "required": false,
+      },
+      "name": {
+        "node": {
+          "title": "EquipmentGroupsView.name",
+          "type": "string",
+        },
+        "required": false,
+      },
+      "notes": {
+        "node": {
+          "title": "EquipmentGroupsView.notes",
+          "type": "string",
+        },
+        "required": false,
+      },
+      "numHealthyThreshold": {
+        "node": {
+          "title": "EquipmentGroupsView.numHealthyThreshold",
+          "type": "number",
+        },
+        "required": false,
+      },
+      "parentId": {
+        "node": {
+          "title": "EquipmentGroupsView.parentId",
+          "type": "any",
+        },
+        "required": false,
+      },
+      "parentPath": {
+        "node": {
+          "title": "EquipmentGroupsView.parentPath",
+          "type": "string",
+        },
+        "required": false,
+      },
+    },
+    "title": "NewEquipmentGroupsView",
+    "type": "object",
+  },
+]
+`;
+
+exports[`Complex type definitions Named Types 1`] = `
+[
+  {
+    "additionalProperties": false,
+    "name": "IType",
+    "properties": {
+      "bar": {
+        "node": {
+          "title": "IType.bar",
+          "type": "string",
+        },
+        "required": true,
+      },
+      "foo": {
+        "node": {
+          "title": "IType.foo",
+          "type": "string",
+        },
+        "required": true,
+      },
+    },
+    "title": "IType",
+    "type": "object",
+  },
+  {
+    "name": "IType2",
+    "ref": "IType",
+    "title": "IType2",
+    "type": "ref",
+  },
+  {
+    "additionalProperties": false,
+    "name": "IType3",
+    "properties": {
+      "bar": {
+        "node": {
+          "title": "IType.bar",
+          "type": "string",
+        },
+        "required": false,
+      },
+      "foo": {
+        "node": {
+          "title": "IType.foo",
+          "type": "string",
+        },
+        "required": false,
+      },
+    },
+    "title": "IType3",
+    "type": "object",
+  },
+]
+`;
+
+exports[`Complex type definitions Omit Type Partial 1`] = `
+[
+  {
+    "additionalProperties": false,
+    "name": "IBase",
+    "properties": {
+      "bar": {
+        "node": {
+          "title": "IBase.bar",
+          "type": "string",
+        },
+        "required": true,
+      },
+      "foo": {
+        "node": {
+          "title": "IBase.foo",
+          "type": "string",
+        },
+        "required": true,
+      },
+      "id": {
+        "node": {
+          "title": "IBase.id",
+          "type": "number",
+        },
+        "required": true,
+      },
+      "name": {
+        "node": {
+          "title": "IBase.name",
+          "type": "string",
+        },
+        "required": true,
+      },
+    },
+    "title": "IBase",
+    "type": "object",
+  },
+  {
+    "additionalProperties": false,
+    "name": "IOmitBase",
+    "properties": {
+      "bar": {
+        "node": {
+          "title": "IBase.bar",
+          "type": "string",
+        },
+        "required": true,
+      },
+      "foo": {
+        "node": {
+          "title": "IBase.foo",
+          "type": "string",
+        },
+        "required": true,
+      },
+      "name": {
+        "node": {
+          "title": "IBase.name",
+          "type": "string",
+        },
+        "required": true,
+      },
+    },
+    "title": "IOmitBase",
+    "type": "object",
+  },
+  {
+    "name": "Foo",
+    "title": "Foo",
+    "type": "any",
+  },
+]
+`;
+
+exports[`Complex type definitions Omit interface Partial 1`] = `
+[
+  {
+    "additionalProperties": false,
+    "name": "IOmitBase",
+    "properties": {
+      "bar": {
+        "node": {
+          "title": "IOmitBase.bar",
+          "type": "string",
+        },
+        "required": true,
+      },
+      "foo": {
+        "node": {
+          "title": "IOmitBase.foo",
+          "type": "string",
+        },
+        "required": true,
+      },
+      "name": {
+        "node": {
+          "title": "IOmitBase.name",
+          "type": "string",
+        },
+        "required": true,
+      },
+    },
+    "title": "IOmitBase",
+    "type": "object",
+  },
+  {
+    "additionalProperties": false,
+    "name": "Foo",
+    "properties": {
+      "bar": {
+        "node": {
+          "title": "IOmitBase.bar",
+          "type": "string",
+        },
+        "required": false,
+      },
+      "foo": {
+        "node": {
+          "title": "IOmitBase.foo",
+          "type": "string",
+        },
+        "required": false,
+      },
+      "name": {
+        "node": {
+          "title": "IOmitBase.name",
+          "type": "string",
+        },
+        "required": false,
+      },
+    },
+    "title": "Foo",
+    "type": "object",
+  },
+]
+`;
+
+exports[`Complex type definitions Simple Partial 1`] = `
+[
+  {
+    "additionalProperties": false,
+    "name": "IBase",
+    "properties": {
+      "bar": {
+        "node": {
+          "title": "IBase.bar",
+          "type": "string",
+        },
+        "required": true,
+      },
+      "foo": {
+        "node": {
+          "title": "IBase.foo",
+          "type": "string",
+        },
+        "required": true,
+      },
+      "id": {
+        "node": {
+          "title": "IBase.id",
+          "type": "number",
+        },
+        "required": true,
+      },
+      "name": {
+        "node": {
+          "title": "IBase.name",
+          "type": "string",
+        },
+        "required": true,
+      },
+    },
+    "title": "IBase",
+    "type": "object",
+  },
+  {
+    "additionalProperties": false,
+    "name": "Foo",
+    "properties": {
+      "bar": {
+        "node": {
+          "title": "IBase.bar",
+          "type": "string",
+        },
+        "required": false,
+      },
+      "foo": {
+        "node": {
+          "title": "IBase.foo",
+          "type": "string",
+        },
+        "required": false,
+      },
+      "id": {
+        "node": {
+          "title": "IBase.id",
+          "type": "number",
+        },
+        "required": false,
+      },
+      "name": {
+        "node": {
+          "title": "IBase.name",
+          "type": "string",
+        },
+        "required": false,
+      },
+    },
+    "title": "Foo",
+    "type": "object",
+  },
+]
+`;
+
+exports[`complex partial/pick/omit handle complex deep case 1`] = `
+[
+  {
+    "additionalProperties": false,
+    "name": "Fee",
+    "properties": {
+      "c": {
+        "node": {
+          "const": "cc",
+          "title": "Foo.c",
+          "type": "string",
+        },
+        "required": false,
+      },
+      "d": {
+        "node": {
+          "const": "dd",
+          "title": "Foo.d",
+          "type": "string",
+        },
+        "required": false,
+      },
+    },
+    "title": "Fee",
+    "type": "object",
+  },
+]
+`;
+
+exports[`type alias of known type 1`] = `
+[
+  {
+    "name": "IAlias",
+    "ref": "IType",
+    "title": "IAlias",
+    "type": "ref",
+  },
+  {
+    "name": "IType",
+    "title": "IType",
+    "type": "string",
+  },
+]
+`;
+
+exports[`type alias of unknown type 1`] = `
+[
+  {
+    "name": "IAlias",
+    "title": "IAlias",
+    "type": "any",
+  },
+]
+`;
