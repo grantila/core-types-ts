@@ -1,62 +1,54 @@
-import type { NamedType, NodeDocument } from 'core-types'
+import type { NamedType, NodeDocument } from 'core-types';
 
-import { convertCoreTypesToTypeScript } from './core-types-to-ts.js'
-import { convertTypeScriptToCoreTypes } from './ts-to-core-types.js'
+import { convertCoreTypesToTypeScript } from './core-types-to-ts.js';
+import { convertTypeScriptToCoreTypes } from './ts-to-core-types.js';
 
+const wrapDocument = (types: Array<NamedType>): NodeDocument => ({
+	version: 1,
+	types,
+});
 
-const wrapDocument = ( types: Array< NamedType > ): NodeDocument =>
-	( {
-		version: 1,
-		types
-	} );
-
-describe( "bi-directional conversion", ( ) =>
-{
-	it( "should be bidirectional", ( ) =>
-	{
+describe('bi-directional conversion', () => {
+	it('should be bidirectional', () => {
 		const ts = convertCoreTypesToTypeScript(
-			wrapDocument( [
+			wrapDocument([
 				{
-					name: "User",
-					title: "User type",
-					description: "This type holds the user information",
-					type: "object",
+					name: 'User',
+					title: 'User type',
+					description: 'This type holds the user information',
+					type: 'object',
 					properties: {
 						name: {
-							node: { type: "string", title: "The real name" },
+							node: { type: 'string', title: 'The real name' },
 							required: true,
 						},
 					},
 					additionalProperties: false,
 				},
-			] ),
-			{ noDescriptiveHeader: true }
+			]),
+			{ noDescriptiveHeader: true },
 		);
 
 		const epi = convertCoreTypesToTypeScript(
-			convertTypeScriptToCoreTypes( ts.data ).data,
-			{ noDescriptiveHeader: true }
+			convertTypeScriptToCoreTypes(ts.data).data,
+			{ noDescriptiveHeader: true },
 		);
 
-		expect( epi ).toEqual( ts );
-	} );
+		expect(epi).toEqual(ts);
+	});
 
-	it( "should forward -1 back and forth", ( ) =>
-	{
-		const ct = convertTypeScriptToCoreTypes(
-			`export type Num = 1000 | -1;`
-		);
+	it('should forward -1 back and forth', () => {
+		const ct = convertTypeScriptToCoreTypes(`export type Num = 1000 | -1;`);
 
-		const ts = convertCoreTypesToTypeScript(
-			ct.data,
-			{ noDescriptiveHeader: true, noDisableLintHeader: true }
-		);
+		const ts = convertCoreTypesToTypeScript(ct.data, {
+			noDescriptiveHeader: true,
+			noDisableLintHeader: true,
+		});
 
-		expect( ts.data ).toMatchSnapshot( );
-	} );
+		expect(ts.data).toMatchSnapshot();
+	});
 
-	it( "should handle namespaces with underscore", ( ) =>
-	{
+	it('should handle namespaces with underscore', () => {
 		const ct = convertTypeScriptToCoreTypes(
 			`
 			namespace Foo {
@@ -65,28 +57,24 @@ describe( "bi-directional conversion", ( ) =>
 				}
 			}
 			`,
-			{ namespaces: 'join-underscore' }
+			{ namespaces: 'join-underscore' },
 		);
 
-		const ts = convertCoreTypesToTypeScript(
-			ct.data,
-			{
-				namespaces: 'underscore',
-				noDescriptiveHeader: true,
-				noDisableLintHeader: true,
-			}
-		);
+		const ts = convertCoreTypesToTypeScript(ct.data, {
+			namespaces: 'underscore',
+			noDescriptiveHeader: true,
+			noDisableLintHeader: true,
+		});
 
-		expect( ts.data ).toBe(
-`namespace Foo { namespace Bar {
+		expect(ts.data).toBe(
+			`namespace Foo { namespace Bar {
 export type Baz = 42;
 } }
-`
+`,
 		);
-	} );
+	});
 
-	it( "should handle namespaces with dot", ( ) =>
-	{
+	it('should handle namespaces with dot', () => {
 		const ct = convertTypeScriptToCoreTypes(
 			`
 			namespace Foo {
@@ -95,28 +83,24 @@ export type Baz = 42;
 				}
 			}
 			`,
-			{ namespaces: 'join-dot' }
+			{ namespaces: 'join-dot' },
 		);
 
-		const ts = convertCoreTypesToTypeScript(
-			ct.data,
-			{
-				namespaces: 'dot',
-				noDescriptiveHeader: true,
-				noDisableLintHeader: true,
-			}
-		);
+		const ts = convertCoreTypesToTypeScript(ct.data, {
+			namespaces: 'dot',
+			noDescriptiveHeader: true,
+			noDisableLintHeader: true,
+		});
 
-		expect( ts.data ).toBe(
-`namespace Foo { namespace Bar {
+		expect(ts.data).toBe(
+			`namespace Foo { namespace Bar {
 export type Baz = 42;
 } }
-`
+`,
 		);
-	} );
+	});
 
-	it( "should handle namespaces with underscore, as all", ( ) =>
-	{
+	it('should handle namespaces with underscore, as all', () => {
 		const ct = convertTypeScriptToCoreTypes(
 			`
 			namespace Foo {
@@ -126,30 +110,26 @@ export type Baz = 42;
 			}
 			export type Bak = 17;
 			`,
-			{ namespaces: 'join-underscore' }
+			{ namespaces: 'join-underscore' },
 		);
 
-		const ts = convertCoreTypesToTypeScript(
-			ct.data,
-			{
-				namespaces: 'all',
-				noDescriptiveHeader: true,
-				noDisableLintHeader: true,
-			}
-		);
+		const ts = convertCoreTypesToTypeScript(ct.data, {
+			namespaces: 'all',
+			noDescriptiveHeader: true,
+			noDisableLintHeader: true,
+		});
 
-		expect( ts.data ).toBe(
-`namespace Foo { namespace Bar {
+		expect(ts.data).toBe(
+			`namespace Foo { namespace Bar {
 export type Baz = 42;
 } }
 
 export type Bak = 17;
-`
+`,
 		);
-	} );
+	});
 
-	it( "should handle ignore namespaces", ( ) =>
-	{
+	it('should handle ignore namespaces', () => {
 		const ct = convertTypeScriptToCoreTypes(
 			`
 			namespace Foo {
@@ -159,28 +139,24 @@ export type Bak = 17;
 			}
 			export type Bak = 17;
 			`,
-			{ namespaces: 'join-underscore' }
+			{ namespaces: 'join-underscore' },
 		);
 
-		const ts = convertCoreTypesToTypeScript(
-			ct.data,
-			{
-				namespaces: 'ignore',
-				noDescriptiveHeader: true,
-				noDisableLintHeader: true,
-			}
-		);
+		const ts = convertCoreTypesToTypeScript(ct.data, {
+			namespaces: 'ignore',
+			noDescriptiveHeader: true,
+			noDisableLintHeader: true,
+		});
 
-		expect( ts.data ).toBe(
-`export type Foo_Bar_Baz = 42;
+		expect(ts.data).toBe(
+			`export type Foo_Bar_Baz = 42;
 
 export type Bak = 17;
-`
+`,
 		);
-	} );
+	});
 
-	it( "handle extending two interfaces (include-if-referenced)", ( ) =>
-	{
+	it('handle extending two interfaces (include-if-referenced)', () => {
 		const coreTypes = convertTypeScriptToCoreTypes(
 			`
 				interface A {
@@ -194,20 +170,17 @@ export type Bak = 17;
 				}
 			`,
 			{
-				nonExported: 'include-if-referenced'
-			}
+				nonExported: 'include-if-referenced',
+			},
 		);
 
-		const ts = convertCoreTypesToTypeScript(
-			coreTypes.data,
-			{
-				noDescriptiveHeader: true,
-				noDisableLintHeader: true,
-			}
-		);
+		const ts = convertCoreTypesToTypeScript(coreTypes.data, {
+			noDescriptiveHeader: true,
+			noDisableLintHeader: true,
+		});
 
-		expect( ts.data ).toBe(
-`export interface B {
+		expect(ts.data).toBe(
+			`export interface B {
     b: "b";
 }
 
@@ -218,7 +191,7 @@ export interface C extends A, B {
 export interface A {
     a: "a";
 }
-`
+`,
 		);
-	} );
-} );
+	});
+});

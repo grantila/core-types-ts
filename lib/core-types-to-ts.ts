@@ -1,4 +1,4 @@
-import ts from 'typescript'
+import ts from 'typescript';
 import {
 	type AndType,
 	type ArrayType,
@@ -14,7 +14,7 @@ import {
 	type TupleType,
 	isPrimitiveType,
 	UnsupportedError,
-} from 'core-types'
+} from 'core-types';
 
 import {
 	createCodeHeader,
@@ -22,111 +22,95 @@ import {
 	safeName,
 	tsUnknownTypeAnnotation,
 	wrapAnnotations,
-} from './ts-helpers.js'
-import type { ToTsOptions } from './types.js'
-
+} from './ts-helpers.js';
+import type { ToTsOptions } from './types.js';
 
 const { factory } = ts;
 
 const createdByPackage = 'core-types-ts';
 const createdByUrl = 'https://github.com/grantila/core-types-ts';
 
-interface Context
-{
+interface Context {
 	useUnknown: boolean;
-	rootTypes: Array< NamedType >;
+	rootTypes: Array<NamedType>;
 }
 
 function throwUnsupported(
 	msg: string,
 	node: NodeType,
-	meta?: CoreTypesErrorMeta
-)
-: never
-{
-	throw new UnsupportedError( msg, { loc: node.loc, ...meta } );
+	meta?: CoreTypesErrorMeta,
+): never {
+	throw new UnsupportedError(msg, { loc: node.loc, ...meta });
 }
 
 export function convertCoreTypesToTypeScript(
 	doc: NodeDocument,
-	opts: ToTsOptions = { }
-)
-: ConversionResult
-{
+	opts: ToTsOptions = {},
+): ConversionResult {
 	const { version, types } = doc;
 
-	if ( version !== 1 )
+	if (version !== 1)
 		throw new UnsupportedError(
-			`core-types version ${version} not supported`
+			`core-types version ${version} not supported`,
 		);
 
-	const convertedTypes: Array< string > = [ ];
+	const convertedTypes: Array<string> = [];
 
-	const wrapInNamespaces = ( code: string, namespaceList: string[ ] ) =>
+	const wrapInNamespaces = (code: string, namespaceList: string[]) =>
 		namespaceList.length === 0
 			? code
-			: namespaceList.map( ns => `namespace ${ns} {` ).join( ' ' ) +
-				`\n${code}\n` +
-				namespaceList.map( ( ) => '}' ).join( ' ' );
+			: namespaceList.map((ns) => `namespace ${ns} {`).join(' ') +
+			  `\n${code}\n` +
+			  namespaceList.map(() => '}').join(' ');
 
-	const sourceCode =
-		types
-		.map( node =>
-		{
+	const sourceCode = types
+		.map((node) => {
 			const { name } = node;
 
-			const ctx: Omit< Context, 'useUnknown' > = {
+			const ctx: Omit<Context, 'useUnknown'> = {
 				rootTypes: types,
 			};
 
-			const tsNode = convertSingleCoreType( node, opts, ctx );
+			const tsNode = convertSingleCoreType(node, opts, ctx);
 
-			convertedTypes.push( name );
+			convertedTypes.push(name);
 
 			return tsNode;
-		} )
-		.map( ( { declaration: tsNode, namespaceList } ) =>
-			wrapInNamespaces( generateCode( tsNode ), namespaceList )
+		})
+		.map(({ declaration: tsNode, namespaceList }) =>
+			wrapInNamespaces(generateCode(tsNode), namespaceList),
 		)
-		.join( "\n\n" );
+		.join('\n\n');
 
-	const header = createCodeHeader( {
+	const header = createCodeHeader({
 		...opts,
 		createdByPackage,
 		createdByUrl,
-	} );
+	});
 
 	return {
-		data:
-			header +
-			sourceCode +
-			( sourceCode.endsWith( "\n" ) ? "" : "\n" ),
+		data: header + sourceCode + (sourceCode.endsWith('\n') ? '' : '\n'),
 		convertedTypes,
-		notConvertedTypes: [ ],
+		notConvertedTypes: [],
 	};
 }
 
 export function convertSingleCoreTypeToTypeScriptAst(
 	node: NamedType,
-	opts: Pick< ToTsOptions, 'useUnknown' | 'declaration' | 'namespaces' > =
-		{ }
-)
-: { declaration: ts.Declaration; namespaceList: string[ ]; }
-{
-	const ctx: Omit< Context, 'useUnknown' > = {
-		rootTypes: [ ],
+	opts: Pick<ToTsOptions, 'useUnknown' | 'declaration' | 'namespaces'> = {},
+): { declaration: ts.Declaration; namespaceList: string[] } {
+	const ctx: Omit<Context, 'useUnknown'> = {
+		rootTypes: [],
 	};
 
-	return convertSingleCoreType( node, opts, ctx );
+	return convertSingleCoreType(node, opts, ctx);
 }
 
 export function convertSingleCoreType(
 	node: NamedType,
-	opts: Pick< ToTsOptions, 'useUnknown' | 'declaration' | 'namespaces' >,
-	partialCtx: Omit< Context, 'useUnknown' >
-)
-: { declaration: ts.Declaration; namespaceList: string[ ]; }
-{
+	opts: Pick<ToTsOptions, 'useUnknown' | 'declaration' | 'namespaces'>,
+	partialCtx: Omit<Context, 'useUnknown'>,
+): { declaration: ts.Declaration; namespaceList: string[] } {
 	const {
 		useUnknown = false,
 		declaration = false,
@@ -138,100 +122,92 @@ export function convertSingleCoreType(
 		useUnknown,
 	};
 
-	const { name, namespaces: namespaceList } =
-		makeNameAndNamespace( node.name, namespaces );
+	const { name, namespaces: namespaceList } = makeNameAndNamespace(
+		node.name,
+		namespaces,
+	);
 
-	const ret = tsType( ctx, node, true );
+	const ret = tsType(ctx, node, true);
 
-	const doExport = ( tsNode: ts.Declaration ) =>
-		wrapAnnotations( tsNode, node );
+	const doExport = (tsNode: ts.Declaration) => wrapAnnotations(tsNode, node);
 
 	const typeDeclaration =
 		ret.type === 'flow-type'
-		? declareType( declaration, name, ret.node )
-		: declareInterface( declaration, name, ret.properties, ret.inherits );
+			? declareType(declaration, name, ret.node)
+			: declareInterface(declaration, name, ret.properties, ret.inherits);
 
 	return {
-		declaration: doExport( typeDeclaration ),
+		declaration: doExport(typeDeclaration),
 		namespaceList,
 	};
 }
 
 function makeNameAndNamespace(
 	name: string,
-	namespaces: ToTsOptions[ 'namespaces' ]
-)
-: { name: string; namespaces: string[ ]; }
-{
-	if ( !namespaces || namespaces === 'ignore' )
-		return { name, namespaces: [ ] };
+	namespaces: ToTsOptions['namespaces'],
+): { name: string; namespaces: string[] } {
+	if (!namespaces || namespaces === 'ignore') return { name, namespaces: [] };
 
-	const parts = name
-		.split(
-			namespaces === 'dot' ? '.' :
-			namespaces === 'underscore' ? '_' :
-			/[._]/
-		);
+	const parts = name.split(
+		namespaces === 'dot' ? '.' : namespaces === 'underscore' ? '_' : /[._]/,
+	);
 
-	const lastPart = parts.pop( )!;
+	const lastPart = parts.pop()!;
 	return { name: lastPart, namespaces: parts };
 }
 
-function createExportModifier( declaration: boolean )
-{
+function createExportModifier(declaration: boolean) {
 	return factory.createModifiersFromModifierFlags(
 		declaration
-		? ts.ModifierFlags.Export | ts.ModifierFlags.Ambient
-		: ts.ModifierFlags.Export
+			? ts.ModifierFlags.Export | ts.ModifierFlags.Ambient
+			: ts.ModifierFlags.Export,
 	);
 }
 
-function declareType( declaration: boolean, name: string, node: ts.TypeNode )
-{
+function declareType(declaration: boolean, name: string, node: ts.TypeNode) {
 	return factory.createTypeAliasDeclaration(
-		createExportModifier( declaration ), // modifiers
-		factory.createIdentifier( name ),
+		createExportModifier(declaration), // modifiers
+		factory.createIdentifier(name),
 		undefined, // type parameters
-		node
+		node,
 	);
 }
 
 function declareInterface(
 	declaration: boolean,
 	name: string,
-	nodes: Array< ts.TypeElement >,
-	inherits: Array< string >
-)
-{
+	nodes: Array<ts.TypeElement>,
+	inherits: Array<string>,
+) {
 	const heritage: ts.HeritageClause[] | undefined =
 		inherits.length === 0
-		? undefined
-		: [
-			factory.createHeritageClause(
-				ts.SyntaxKind.ExtendsKeyword,
-				inherits.map( name =>
-					factory.createExpressionWithTypeArguments(
-						factory.createIdentifier( name ),
-						undefined // type arguments
-					)
-				)
-			)
-		];
+			? undefined
+			: [
+					factory.createHeritageClause(
+						ts.SyntaxKind.ExtendsKeyword,
+						inherits.map((name) =>
+							factory.createExpressionWithTypeArguments(
+								factory.createIdentifier(name),
+								undefined, // type arguments
+							),
+						),
+					),
+			  ];
 
 	return factory.createInterfaceDeclaration(
-			createExportModifier( declaration ), // modifiers
-			factory.createIdentifier( name ),
-			undefined, // type parameters
-			heritage,
-			nodes
-		);
+		createExportModifier(declaration), // modifiers
+		factory.createIdentifier(name),
+		undefined, // type parameters
+		heritage,
+		nodes,
+	);
 }
 
 interface TsTypeReturnAsObject {
 	type: 'object';
 	node: ts.TypeLiteralNode;
-	properties: Array< ts.TypeElement >;
-	inherits: Array< string >;
+	properties: Array<ts.TypeElement>;
+	inherits: Array<string>;
 }
 interface TsTypeReturnAsFlowType {
 	type: 'flow-type';
@@ -239,100 +215,93 @@ interface TsTypeReturnAsFlowType {
 }
 type TsTypeReturn = TsTypeReturnAsObject | TsTypeReturnAsFlowType;
 
-function tsTypeUnion( ctx: Context, node: OrType ): ts.TypeNode
-{
+function tsTypeUnion(ctx: Context, node: OrType): ts.TypeNode {
 	return factory.createUnionTypeNode(
-		node.or.map( elem =>
-			wrapAnnotations( tsTypeAndOrSchema( ctx, elem ), elem )
-		)
-	)
+		node.or.map((elem) =>
+			wrapAnnotations(tsTypeAndOrSchema(ctx, elem), elem),
+		),
+	);
 }
 
-function tsTypeIntersection( ctx: Context, node: AndType ): ts.TypeNode
-{
+function tsTypeIntersection(ctx: Context, node: AndType): ts.TypeNode {
 	return factory.createIntersectionTypeNode(
-		node.and.map( elem =>
-			wrapAnnotations( tsTypeAndOrSchema( ctx, elem ), elem )
-		)
-	)
+		node.and.map((elem) =>
+			wrapAnnotations(tsTypeAndOrSchema(ctx, elem), elem),
+		),
+	);
 }
 
-function tsTypeAndOrSchema( ctx: Context, node: NodeType ): ts.TypeNode
-{
-	if ( node.type === 'and' || node.type === 'or' )
-		return tsTypeAndOr( ctx, node );
-	else
-		return tsType( ctx, node ).node;
+function tsTypeAndOrSchema(ctx: Context, node: NodeType): ts.TypeNode {
+	if (node.type === 'and' || node.type === 'or')
+		return tsTypeAndOr(ctx, node);
+	else return tsType(ctx, node).node;
 }
 
-function tsTypeAndOr( ctx: Context, andOr: AndType | OrType ): ts.TypeNode
-{
-	if ( andOr.type === 'and' )
-		return tsTypeIntersection( ctx, andOr );
-	else
-		return tsTypeUnion( ctx, andOr );
+function tsTypeAndOr(ctx: Context, andOr: AndType | OrType): ts.TypeNode {
+	if (andOr.type === 'and') return tsTypeIntersection(ctx, andOr);
+	else return tsTypeUnion(ctx, andOr);
 }
 
-function tsAny( ctx: Context ): ts.TypeNode
-{
+function tsAny(ctx: Context): ts.TypeNode {
 	return ctx.useUnknown
-		? tsUnknownTypeAnnotation( )
-		: factory.createKeywordTypeNode( ts.SyntaxKind.AnyKeyword );
+		? tsUnknownTypeAnnotation()
+		: factory.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword);
 }
 
-function tsType( ctx: Context, node: NodeType, topLevel = false ): TsTypeReturn
-{
-	if ( topLevel && node.type === 'and' && isObjectWithHeritage( ctx, node ) )
-		return { type: 'object', ...tsObjectTypeWithWithHeritage( ctx, node ) };
+function tsType(ctx: Context, node: NodeType, topLevel = false): TsTypeReturn {
+	if (topLevel && node.type === 'and' && isObjectWithHeritage(ctx, node))
+		return { type: 'object', ...tsObjectTypeWithWithHeritage(ctx, node) };
 
-	if ( node.type === 'and' || node.type === 'or' )
-		return { type: 'flow-type', node: tsTypeAndOr( ctx, node ) };
+	if (node.type === 'and' || node.type === 'or')
+		return { type: 'flow-type', node: tsTypeAndOr(ctx, node) };
 
-	if ( node.type === 'null' )
-		return { type: 'flow-type', node: tsPrimitiveType( node ) };
+	if (node.type === 'null')
+		return { type: 'flow-type', node: tsPrimitiveType(node) };
 
-	const { const: _const, enum: _enum } = node as
-		( typeof node & { const: unknown; enum: unknown; } );
+	const { const: _const, enum: _enum } = node as typeof node & {
+		const: unknown;
+		enum: unknown;
+	};
 
-	if ( _const )
+	if (_const)
 		return {
 			type: 'flow-type',
-			node: tsConstType( ctx, node, _const ),
+			node: tsConstType(ctx, node, _const),
 		};
-	else if ( _enum )
+	else if (_enum)
 		return {
 			type: 'flow-type',
 			node: factory.createUnionTypeNode(
-				( _enum as Array< unknown > )
-					.map( elem => tsConstType( ctx, node, elem ) )
-			)
+				(_enum as Array<unknown>).map((elem) =>
+					tsConstType(ctx, node, elem),
+				),
+			),
 		};
 
-	if ( isPrimitiveType( node ) )
-		return { type: 'flow-type', node: tsPrimitiveType( node ) };
+	if (isPrimitiveType(node))
+		return { type: 'flow-type', node: tsPrimitiveType(node) };
 
-	if ( node.type === 'any' )
+	if (node.type === 'any')
 		return {
 			type: 'flow-type',
-			node: tsAny( ctx ),
+			node: tsAny(ctx),
 		};
 
-	if ( node.type === 'ref' )
-		return { type: 'flow-type', node: tsRefType( node ) };
+	if (node.type === 'ref')
+		return { type: 'flow-type', node: tsRefType(node) };
 
-	if ( node.type === 'object' )
-		return { type: 'object', ...tsObjectType( ctx, node ) };
+	if (node.type === 'object')
+		return { type: 'object', ...tsObjectType(ctx, node) };
 
-	if ( node.type === 'array' || node.type === 'tuple' )
-		return { type: 'flow-type', node: tsArrayType( ctx, node ) };
+	if (node.type === 'array' || node.type === 'tuple')
+		return { type: 'flow-type', node: tsArrayType(ctx, node) };
 
-	throwUnsupported( `Type ${(node as any).type} not supported`, node );
+	throwUnsupported(`Type ${(node as any).type} not supported`, node);
 }
 
-function tsNullType( ): ts.TypeNode
-{
+function tsNullType(): ts.TypeNode {
 	return factory.createLiteralTypeNode(
-		factory.createToken( ts.SyntaxKind.NullKeyword )
+		factory.createToken(ts.SyntaxKind.NullKeyword),
 	);
 }
 
@@ -343,60 +312,54 @@ const primitiveTypeMap = {
 	boolean: ts.SyntaxKind.BooleanKeyword,
 } as const;
 
-function tsPrimitiveType( node: PrimitiveType ): ts.TypeNode
-{
+function tsPrimitiveType(node: PrimitiveType): ts.TypeNode {
 	const { type } = node;
-	if ( type === "null" )
-		return tsNullType( );
-	else if ( primitiveTypeMap[ type as keyof typeof primitiveTypeMap ] )
+	if (type === 'null') return tsNullType();
+	else if (primitiveTypeMap[type as keyof typeof primitiveTypeMap])
 		return factory.createKeywordTypeNode(
-			primitiveTypeMap[ type as keyof typeof primitiveTypeMap ]
+			primitiveTypeMap[type as keyof typeof primitiveTypeMap],
 		);
 
-	throwUnsupported( `Invalid primitive type: ${type}`, node );
+	throwUnsupported(`Invalid primitive type: ${type}`, node);
 }
 
-function tsConstType( ctx: Context, node: NodeType, value: any ): ts.TypeNode
-{
-	return value === "null"
-		? tsNullType( )
-		: typeof value === "string"
-		? factory.createStringLiteral( value )
-		: typeof value === "number"
-		? factory.createNumericLiteral( value )
-		: typeof value === "boolean"
-		?  value ? factory.createTrue( ) : factory.createFalse( )
-		: typeof value === "object"
-		? Array.isArray( value )
-			? tsArrayConstExpression( ctx, node, value ) as any
-			: tsObjectType( ctx, value ).node
-		: ( ( ) =>
-			{
-				throwUnsupported(
-					`Invalid const value: "${value}"`,
-					node,
-					{ blob: value }
-				);
-			} )( );
+function tsConstType(ctx: Context, node: NodeType, value: any): ts.TypeNode {
+	return value === 'null'
+		? tsNullType()
+		: typeof value === 'string'
+		? factory.createStringLiteral(value)
+		: typeof value === 'number'
+		? factory.createNumericLiteral(value)
+		: typeof value === 'boolean'
+		? value
+			? factory.createTrue()
+			: factory.createFalse()
+		: typeof value === 'object'
+		? Array.isArray(value)
+			? (tsArrayConstExpression(ctx, node, value) as any)
+			: tsObjectType(ctx, value).node
+		: (() => {
+				throwUnsupported(`Invalid const value: "${value}"`, node, {
+					blob: value,
+				});
+		  })();
 }
 
-function tsArrayConstExpression< T >(
+function tsArrayConstExpression<T>(
 	ctx: Context,
 	node: NodeType,
-	value: Array< T >
-)
-: ts.TypeNode
-{
+	value: Array<T>,
+): ts.TypeNode {
 	return factory.createTupleTypeNode(
-		value.map( elem => tsConstType( ctx, node, elem ) )
-	)
+		value.map((elem) => tsConstType(ctx, node, elem)),
+	);
 }
 
-function createAdditionalMembers( ctx: Context, type: true | NodeType )
-: ts.IndexSignatureDeclaration
-{
-	if ( type === true )
-		return createAdditionalMembers( ctx, { type: 'any' } );
+function createAdditionalMembers(
+	ctx: Context,
+	type: true | NodeType,
+): ts.IndexSignatureDeclaration {
+	if (type === true) return createAdditionalMembers(ctx, { type: 'any' });
 
 	return factory.createIndexSignature(
 		undefined, // modifiers
@@ -406,79 +369,71 @@ function createAdditionalMembers( ctx: Context, type: true | NodeType )
 				undefined, // dotdotdot token
 				'key',
 				undefined, // question token
-				tsType( ctx, { type: 'string' } ).node
-			)
+				tsType(ctx, { type: 'string' }).node,
+			),
 		],
-		tsType( ctx, type ).node
+		tsType(ctx, type).node,
 	);
 }
 
-function tsObjectType( ctx: Context, node: ObjectType )
-: Omit< TsTypeReturnAsObject, 'type' >
-{
-	const {
-		properties,
-		additionalProperties = false,
-	} = node;
+function tsObjectType(
+	ctx: Context,
+	node: ObjectType,
+): Omit<TsTypeReturnAsObject, 'type'> {
+	const { properties, additionalProperties = false } = node;
 
 	const additionalEntry =
-		additionalProperties === false ? [ ]
-		: [ createAdditionalMembers( ctx, additionalProperties ) ];
+		additionalProperties === false
+			? []
+			: [createAdditionalMembers(ctx, additionalProperties)];
 
-	const createQuestionmark = ( required: boolean ) =>
-		required
-		? undefined
-		: factory.createToken( ts.SyntaxKind.QuestionToken );
+	const createQuestionmark = (required: boolean) =>
+		required ? undefined : factory.createToken(ts.SyntaxKind.QuestionToken);
 
-	const propertyNodes: Array< ts.TypeElement > = [
-		...Object
-			.keys( properties )
-			.map( name => ( { name, ...properties[ name ] } ) )
-			.map( ( { name, node, required } ) =>
+	const propertyNodes: Array<ts.TypeElement> = [
+		...Object.keys(properties)
+			.map((name) => ({ name, ...properties[name] }))
+			.map(({ name, node, required }) =>
 				wrapAnnotations(
 					factory.createPropertySignature(
 						undefined, // modifiers
-						safeName( name ),
-						createQuestionmark( required ),
-						tsType( ctx, node ).node
+						safeName(name),
+						createQuestionmark(required),
+						tsType(ctx, node).node,
 					),
-					properties[ name ].node
-				)
+					properties[name].node,
+				),
 			),
 		...additionalEntry,
 	];
 
-	const objectAsNode = factory.createTypeLiteralNode( propertyNodes );
+	const objectAsNode = factory.createTypeLiteralNode(propertyNodes);
 
-	return { properties: propertyNodes, node: objectAsNode, inherits: [ ] };
+	return { properties: propertyNodes, node: objectAsNode, inherits: [] };
 }
 
 // Extracts objects and refs from an and-type.
 // Only refs that themselves are objects.
-function getObjectsAndRefs( ctx: Context, node: AndType )
-{
+function getObjectsAndRefs(ctx: Context, node: AndType) {
 	const objects = node.and.filter(
-		( node ): node is ObjectType => node.type === 'object'
+		(node): node is ObjectType => node.type === 'object',
 	);
 	const refs = node.and.filter(
-		( node ): node is RefType =>
-			node.type === 'ref'
-			&&
-			ctx.rootTypes.some( rootNode =>
-				rootNode.name === node.ref
-				&&
-				rootNode.type === 'object'
-			)
+		(node): node is RefType =>
+			node.type === 'ref' &&
+			ctx.rootTypes.some(
+				(rootNode) =>
+					rootNode.name === node.ref && rootNode.type === 'object',
+			),
 	);
 
 	return { objects, refs };
 }
 
-function isObjectWithHeritage( ctx: Context, node: AndType ): boolean
-{
-	const { objects, refs } = getObjectsAndRefs( ctx, node );
+function isObjectWithHeritage(ctx: Context, node: AndType): boolean {
+	const { objects, refs } = getObjectsAndRefs(ctx, node);
 
-	if ( objects.length !== 0 && objects.length !== 1 )
+	if (objects.length !== 0 && objects.length !== 1)
 		// Must have zero or one object with properties, not multiple
 		return false;
 
@@ -486,55 +441,49 @@ function isObjectWithHeritage( ctx: Context, node: AndType ): boolean
 	return objects.length + refs.length === node.and.length;
 }
 
-function tsObjectTypeWithWithHeritage( ctx: Context, node: AndType )
-: Omit< TsTypeReturnAsObject, 'type' >
-{
-	const { objects, refs } = getObjectsAndRefs( ctx, node );
+function tsObjectTypeWithWithHeritage(
+	ctx: Context,
+	node: AndType,
+): Omit<TsTypeReturnAsObject, 'type'> {
+	const { objects, refs } = getObjectsAndRefs(ctx, node);
 
-	const ret: ReturnType< typeof tsObjectType > =
+	const ret: ReturnType<typeof tsObjectType> =
 		objects.length === 0
-		? {
-			properties: [ ],
-			node: factory.createTypeLiteralNode( [ ] ),
-			inherits: [ ],
-		}
-		: tsObjectType( ctx, objects[ 0 ] )
+			? {
+					properties: [],
+					node: factory.createTypeLiteralNode([]),
+					inherits: [],
+			  }
+			: tsObjectType(ctx, objects[0]);
 
-	return { ...ret, inherits: refs.map( node => node.ref ) };
+	return { ...ret, inherits: refs.map((node) => node.ref) };
 }
 
-function tsSpreadType( ctx: Context, node: NodeType ): ts.TypeNode
-{
+function tsSpreadType(ctx: Context, node: NodeType): ts.TypeNode {
 	return factory.createArrayTypeNode(
-		factory.createRestTypeNode( tsType( ctx, node ).node )
+		factory.createRestTypeNode(tsType(ctx, node).node),
 	);
 }
 
-function tsArrayType( ctx: Context, node: ArrayType | TupleType ): ts.TypeNode
-{
+function tsArrayType(ctx: Context, node: ArrayType | TupleType): ts.TypeNode {
 	// TODO: Add support for minItems (making rest arguments optional)
 	// TODO: Maybe add support for maxItems (turning an array into a tuple of
 	//       some "good" max size)
 	// Both are tricky for merged (anyOf, allOf, if-then-else) conditionals
 	// if the types come from json schema...
 
-	if ( node.type === 'tuple' )
-		return factory.createTupleTypeNode( [
-			...node.elementTypes.map( elem => tsType( ctx, elem ).node ),
-			...( !node.additionalItems
-				? [ ]
+	if (node.type === 'tuple')
+		return factory.createTupleTypeNode([
+			...node.elementTypes.map((elem) => tsType(ctx, elem).node),
+			...(!node.additionalItems
+				? []
 				: node.additionalItems === true
-				? [ tsSpreadType( ctx, { type: 'any' } ) ]
-				: [ tsSpreadType( ctx, node.additionalItems ) ]
-			)
-		] );
-	else
-		return factory.createArrayTypeNode(
-			tsType( ctx, node.elementType ).node
-		);
+				? [tsSpreadType(ctx, { type: 'any' })]
+				: [tsSpreadType(ctx, node.additionalItems)]),
+		]);
+	else return factory.createArrayTypeNode(tsType(ctx, node.elementType).node);
 }
 
-function tsRefType( node: RefType ): ts.TypeNode
-{
-	return factory.createTypeReferenceNode( node.ref );
+function tsRefType(node: RefType): ts.TypeNode {
+	return factory.createTypeReferenceNode(node.ref);
 }
