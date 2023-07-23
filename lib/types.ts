@@ -1,8 +1,6 @@
-import type { WarnFunction } from 'core-types'
+import type { WarnFunction } from 'core-types';
 
-
-export interface ToTsOptions
-{
+export interface ToTsOptions {
 	warn?: WarnFunction;
 
 	/**
@@ -57,11 +55,7 @@ export interface ToTsOptions
 	 *  - `all`: Split by dot (.) and/or underscores (_) as namespaces for
 	 *    top-level types
 	 */
-	namespaces?:
-		| 'ignore'
-		| 'dot'
-		| 'underscore'
-		| 'all';
+	namespaces?: 'ignore' | 'dot' | 'underscore' | 'all';
 
 	/**
 	 * What to do when detecting an unsupported type
@@ -73,8 +67,7 @@ export interface ToTsOptions
 	unsupported?: 'ignore' | 'warn' | 'error';
 }
 
-export interface FromTsOptions
-{
+export interface FromTsOptions {
 	warn?: WarnFunction;
 
 	/**
@@ -89,11 +82,7 @@ export interface FromTsOptions
 	 *  - `join-dot`: Join namespaces and types with a dot (.)
 	 *  - `join-underscore`: Join namespaces and types with an underscore (_)
 	 */
-	namespaces?:
-		| 'ignore'
-		| 'hoist'
-		| 'join-dot'
-		| 'join-underscore';
+	namespaces?: 'ignore' | 'hoist' | 'join-dot' | 'join-underscore';
 
 	/**
 	 * What to do when detecting a non-exported type:

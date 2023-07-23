@@ -1,24 +1,21 @@
-import { jest } from '@jest/globals'
+import { jest } from '@jest/globals';
 
-import { type NamedType, simplify } from 'core-types'
+import { type NamedType, simplify } from 'core-types';
 
-import { convertTypeScriptToCoreTypes } from './ts-to-core-types.js'
+import { convertTypeScriptToCoreTypes } from './ts-to-core-types.js';
 
+const equal = (a: Array<NamedType>, b: Array<NamedType>) =>
+	expect(a).toStrictEqual(b);
 
-const equal = ( a: Array< NamedType >, b: Array< NamedType > ) =>
-	expect( a ).toStrictEqual( b );
-
-
-it( "object literal type", ( ) =>
-{
-	const coreTypes = convertTypeScriptToCoreTypes( `
+it('object literal type', () => {
+	const coreTypes = convertTypeScriptToCoreTypes(`
 	export interface Foo {
 		foo: string;
 		bar: { baz: number; };
 	}
-	` ).data.types;
+	`).data.types;
 
-	equal( coreTypes, [
+	equal(coreTypes, [
 		{
 			name: 'Foo',
 			title: 'Foo',
@@ -37,43 +34,41 @@ it( "object literal type", ( ) =>
 							baz: {
 								node: { type: 'number', title: 'Foo.bar.baz' },
 								required: true,
-							}
+							},
 						},
 						additionalProperties: false,
 					},
 				},
 			},
 			additionalProperties: false,
-		}
-	] );
-} );
+		},
+	]);
+});
 
-it( "negative numeric literal type", ( ) =>
-{
-	const coreTypes = convertTypeScriptToCoreTypes( `
+it('negative numeric literal type', () => {
+	const coreTypes = convertTypeScriptToCoreTypes(`
 	export type Foo = -1;
-	` ).data.types;
+	`).data.types;
 
-	equal( coreTypes, [
+	equal(coreTypes, [
 		{
 			name: 'Foo',
 			title: 'Foo',
 			type: 'number',
 			const: -1,
-		}
-	] );
-} );
+		},
+	]);
+});
 
-it( "basic interface with additional properties", ( ) =>
-{
-	const coreTypes = convertTypeScriptToCoreTypes( `
+it('basic interface with additional properties', () => {
+	const coreTypes = convertTypeScriptToCoreTypes(`
 	export interface Foo {
 		foo: string | boolean;
 		[ key: string ]: number;
 	}
-	` ).data.types;
+	`).data.types;
 
-	equal( coreTypes, [
+	equal(coreTypes, [
 		{
 			name: 'Foo',
 			title: 'Foo',
@@ -92,19 +87,18 @@ it( "basic interface with additional properties", ( ) =>
 				},
 			},
 			additionalProperties: { type: 'number' },
-		}
-	] );
-} );
+		},
+	]);
+});
 
-it( "basic interface with parenthesized properties", ( ) =>
-{
-	const coreTypes = convertTypeScriptToCoreTypes( `
+it('basic interface with parenthesized properties', () => {
+	const coreTypes = convertTypeScriptToCoreTypes(`
 	export type Foo = {
 		bar: (string | boolean | {baz: 'bak'})[];
 	}
-	` ).data.types;
+	`).data.types;
 
-	equal( simplify( coreTypes ), [
+	equal(simplify(coreTypes), [
 		{
 			name: 'Foo',
 			title: 'Foo',
@@ -125,11 +119,11 @@ it( "basic interface with parenthesized properties", ( ) =>
 									type: 'object',
 									title: 'Foo.bar.[]',
 									properties: {
-										'baz': {
+										baz: {
 											node: {
 												type: 'string',
 												title: 'Foo.bar.[].baz',
-												const: 'bak'
+												const: 'bak',
 											},
 											required: true,
 										},
@@ -142,19 +136,18 @@ it( "basic interface with parenthesized properties", ( ) =>
 				},
 			},
 			additionalProperties: false,
-		}
-	] );
-} );
+		},
+	]);
+});
 
-it( "string unions", ( ) =>
-{
-	const coreTypes = convertTypeScriptToCoreTypes( `
+it('string unions', () => {
+	const coreTypes = convertTypeScriptToCoreTypes(`
 	export interface Foo {
 		foo: "bar" | "baz" | "bak";
 	}
-	` ).data.types;
+	`).data.types;
 
-	equal( simplify( coreTypes ), [
+	equal(simplify(coreTypes), [
 		{
 			name: 'Foo',
 			title: 'Foo',
@@ -165,18 +158,17 @@ it( "string unions", ( ) =>
 					node: {
 						type: 'string',
 						title: 'Foo.foo',
-						enum: [ 'bar', 'baz', 'bak' ],
+						enum: ['bar', 'baz', 'bak'],
 					},
 				},
 			},
 			additionalProperties: false,
-		}
-	] );
-} );
+		},
+	]);
+});
 
-it( "implicit non-exported interface with all types", ( ) =>
-{
-	const coreTypes = convertTypeScriptToCoreTypes( `
+it('implicit non-exported interface with all types', () => {
+	const coreTypes = convertTypeScriptToCoreTypes(`
 	/**
 	 * This is a good type
 	 *
@@ -207,9 +199,9 @@ it( "implicit non-exported interface with all types", ( ) =>
 		[ key: string ]: number;
 	}
 	export type stringOrFiveOrFalseOrNull = string | 5 | false | null;
-	` ).data.types;
+	`).data.types;
 
-	equal( coreTypes, [
+	equal(coreTypes, [
 		{
 			name: 'Foo',
 			title: 'Foo',
@@ -220,10 +212,7 @@ it( "implicit non-exported interface with all types", ( ) =>
 					node: {
 						type: 'and',
 						title: 'Foo.and',
-						and: [
-							{ type: 'string' },
-							{ type: 'number' },
-						],
+						and: [{ type: 'string' }, { type: 'number' }],
 					},
 				},
 				or: {
@@ -233,7 +222,11 @@ it( "implicit non-exported interface with all types", ( ) =>
 						title: 'Foo.or',
 						or: [
 							{ type: 'boolean', title: 'Foo.or' },
-							{ type: 'string', title: 'Foo.or', const: 'foobar' },
+							{
+								type: 'string',
+								title: 'Foo.or',
+								const: 'foobar',
+							},
 						],
 					},
 				},
@@ -292,7 +285,7 @@ it( "implicit non-exported interface with all types", ( ) =>
 					node: {
 						type: 'object',
 						title: 'Foo.object',
-						properties: { },
+						properties: {},
 						additionalProperties: true,
 					},
 				},
@@ -309,7 +302,7 @@ it( "implicit non-exported interface with all types", ( ) =>
 					node: {
 						type: 'array',
 						title: 'Foo.arrayOfAny',
-						elementType: { type: 'any' }
+						elementType: { type: 'any' },
 					},
 				},
 				arrayOfNumber: {
@@ -351,7 +344,7 @@ it( "implicit non-exported interface with all types", ( ) =>
 				{
 					type: 'number',
 					title: 'stringOrFiveOrFalseOrNull',
-					const: 5
+					const: 5,
 				},
 				{
 					type: 'boolean',
@@ -362,36 +355,34 @@ it( "implicit non-exported interface with all types", ( ) =>
 			],
 		},
 		{
-			name: "User",
-			title: "User",
-			description: "This is a good type",
+			name: 'User',
+			title: 'User',
+			description: 'This is a good type',
 			examples: "{ foo: 'bar' }",
-			default: "string",
-			type: "object",
+			default: 'string',
+			type: 'object',
 			properties: {
 				name: {
-					node: { type: "string", title: 'User.name' },
+					node: { type: 'string', title: 'User.name' },
 					required: true,
 				},
 				signupAt: {
-					node: { type: "number", title: 'User.signupAt' },
+					node: { type: 'number', title: 'User.signupAt' },
 					required: true,
 				},
 			},
 			additionalProperties: false,
 		},
-	] );
-} );
+	]);
+});
 
-describe( "optional tuple arguments", ( ) =>
-{
-	it( "first optional", ( ) =>
-	{
-		const coreTypes = convertTypeScriptToCoreTypes( `
+describe('optional tuple arguments', () => {
+	it('first optional', () => {
+		const coreTypes = convertTypeScriptToCoreTypes(`
 			export type T = [ string?, number? ];
-		` ).data.types;
+		`).data.types;
 
-		equal( coreTypes, [
+		equal(coreTypes, [
 			{
 				name: 'T',
 				title: 'T',
@@ -402,17 +393,16 @@ describe( "optional tuple arguments", ( ) =>
 				],
 				minItems: 0,
 				additionalItems: false,
-			}
-		] );
-	} );
+			},
+		]);
+	});
 
-	it( "second optional", ( ) =>
-	{
-		const coreTypes = convertTypeScriptToCoreTypes( `
+	it('second optional', () => {
+		const coreTypes = convertTypeScriptToCoreTypes(`
 			export type T = [ string, number? ];
-		` ).data.types;
+		`).data.types;
 
-		equal( coreTypes, [
+		equal(coreTypes, [
 			{
 				name: 'T',
 				title: 'T',
@@ -423,17 +413,16 @@ describe( "optional tuple arguments", ( ) =>
 				],
 				minItems: 1,
 				additionalItems: false,
-			}
-		] );
-	} );
+			},
+		]);
+	});
 
-	it( "no optional", ( ) =>
-	{
-		const coreTypes = convertTypeScriptToCoreTypes( `
+	it('no optional', () => {
+		const coreTypes = convertTypeScriptToCoreTypes(`
 			export type T = [ string, number ];
-		` ).data.types;
+		`).data.types;
 
-		equal( coreTypes, [
+		equal(coreTypes, [
 			{
 				name: 'T',
 				title: 'T',
@@ -444,15 +433,13 @@ describe( "optional tuple arguments", ( ) =>
 				],
 				minItems: 2,
 				additionalItems: false,
-			}
-		] );
-	} );
-} );
+			},
+		]);
+	});
+});
 
-describe( "non-exported types", ( ) =>
-{
-	it( "ignore", ( ) =>
-	{
+describe('non-exported types', () => {
+	it('ignore', () => {
 		const coreTypes = convertTypeScriptToCoreTypes(
 			`
 				type T = string | number;
@@ -461,11 +448,11 @@ describe( "non-exported types", ( ) =>
 				}
 			`,
 			{
-				nonExported: 'ignore'
-			}
+				nonExported: 'ignore',
+			},
 		).data.types;
 
-		equal( coreTypes, [
+		equal(coreTypes, [
 			{
 				name: 'T2',
 				title: 'T2',
@@ -477,12 +464,11 @@ describe( "non-exported types", ( ) =>
 					},
 				},
 				additionalProperties: false,
-			}
-		] );
-	} );
+			},
+		]);
+	});
 
-	it( "include", ( ) =>
-	{
+	it('include', () => {
 		const coreTypes = convertTypeScriptToCoreTypes(
 			`
 				type T = string | number;
@@ -491,11 +477,11 @@ describe( "non-exported types", ( ) =>
 				}
 			`,
 			{
-				nonExported: 'include'
-			}
+				nonExported: 'include',
+			},
 		).data.types;
 
-		equal( coreTypes, [
+		equal(coreTypes, [
 			{
 				name: 'T',
 				title: 'T',
@@ -516,12 +502,11 @@ describe( "non-exported types", ( ) =>
 					},
 				},
 				additionalProperties: false,
-			}
-		] );
-	} );
+			},
+		]);
+	});
 
-	it( "inline w/o cyclic", ( ) =>
-	{
+	it('inline w/o cyclic', () => {
 		const coreTypes = convertTypeScriptToCoreTypes(
 			`
 				type T = string | number;
@@ -530,11 +515,11 @@ describe( "non-exported types", ( ) =>
 				}
 			`,
 			{
-				nonExported: 'inline'
-			}
+				nonExported: 'inline',
+			},
 		).data.types;
 
-		equal( coreTypes, [
+		equal(coreTypes, [
 			{
 				name: 'T2',
 				title: 'T2',
@@ -554,30 +539,29 @@ describe( "non-exported types", ( ) =>
 					},
 				},
 				additionalProperties: false,
-			}
-		] );
-	} );
+			},
+		]);
+	});
 
-	it( "inline w/ cyclic should fail", ( ) =>
-	{
-		const convert = ( ) => convertTypeScriptToCoreTypes(
-			`
+	it('inline w/ cyclic should fail', () => {
+		const convert = () =>
+			convertTypeScriptToCoreTypes(
+				`
 				type U = T;
 				type T = string | U;
 				export interface T2 {
 					prop: T;
 				}
 			`,
-			{
-				nonExported: 'inline'
-			}
-		).data.types;
+				{
+					nonExported: 'inline',
+				},
+			).data.types;
 
-		expect( convert ).toThrowError( /Cyclic type found/ );
-	} );
+		expect(convert).toThrowError(/Cyclic type found/);
+	});
 
-	it( "include-if-referenced", ( ) =>
-	{
+	it('include-if-referenced', () => {
 		const coreTypes = convertTypeScriptToCoreTypes(
 			`
 				type T = string | number;
@@ -587,11 +571,11 @@ describe( "non-exported types", ( ) =>
 				}
 			`,
 			{
-				nonExported: 'include-if-referenced'
-			}
+				nonExported: 'include-if-referenced',
+			},
 		).data.types;
 
-		equal( coreTypes, [
+		equal(coreTypes, [
 			{
 				name: 'T2',
 				title: 'T2',
@@ -613,15 +597,13 @@ describe( "non-exported types", ( ) =>
 					{ type: 'number', title: 'T' },
 				],
 			},
-		] );
-	} );
-} );
+		]);
+	});
+});
 
-describe( "comments", ( ) =>
-{
-	it( "should convert JSDoc comments properly", ( ) =>
-	{
-		const coreTypes = convertTypeScriptToCoreTypes( `
+describe('comments', () => {
+	it('should convert JSDoc comments properly', () => {
+		const coreTypes = convertTypeScriptToCoreTypes(`
 		/**
 		 * Any kind of ID
 		 *
@@ -659,9 +641,9 @@ describe( "comments", ( ) =>
 				}
 			];
 		}
-		` ).data.types;
+		`).data.types;
 
-		equal( coreTypes, [
+		equal(coreTypes, [
 			{
 				name: 'Id',
 				type: 'or',
@@ -670,9 +652,10 @@ describe( "comments", ( ) =>
 					{ type: 'number', title: 'Id' },
 				],
 				title: 'Id',
-				description: 'Any kind of ID\n\n' +
+				description:
+					'Any kind of ID\n\n' +
 					'This can be either a number or a string',
-				examples: [ '4711', '"some-uuid-goes-here"' ],
+				examples: ['4711', '"some-uuid-goes-here"'],
 				see: 'other Id implementations',
 				default: '0',
 			},
@@ -758,16 +741,13 @@ describe( "comments", ( ) =>
 					},
 				},
 				additionalProperties: false,
-			}
-		] );
-	} );
-} );
+			},
+		]);
+	});
+});
 
-
-describe( "namespaces", ( ) =>
-{
-	it( "interface within namespace, use dot", ( ) =>
-	{
+describe('namespaces', () => {
+	it('interface within namespace, use dot', () => {
 		const coreTypes = convertTypeScriptToCoreTypes(
 			`
 				namespace Zap {
@@ -777,10 +757,10 @@ describe( "namespaces", ( ) =>
 					}
 				}
 			`,
-			{ namespaces: 'join-dot' }
+			{ namespaces: 'join-dot' },
 		).data.types;
 
-		equal( coreTypes, [
+		equal(coreTypes, [
 			{
 				name: 'Zap.Foo',
 				title: 'Zap.Foo',
@@ -802,19 +782,18 @@ describe( "namespaces", ( ) =>
 										title: 'Zap.Foo.bar.baz',
 									},
 									required: true,
-								}
+								},
 							},
 							additionalProperties: false,
 						},
 					},
 				},
 				additionalProperties: false,
-			}
-		] );
-	} );
+			},
+		]);
+	});
 
-	it( "interface within multiple namespace, use dot", ( ) =>
-	{
+	it('interface within multiple namespace, use dot', () => {
 		const coreTypes = convertTypeScriptToCoreTypes(
 			`
 				namespace Zap {
@@ -826,10 +805,10 @@ describe( "namespaces", ( ) =>
 					}
 				}
 			`,
-			{ namespaces: 'join-dot' }
+			{ namespaces: 'join-dot' },
 		).data.types;
 
-		equal( coreTypes, [
+		equal(coreTypes, [
 			{
 				name: 'Zap.Zip.Foo',
 				title: 'Zap.Zip.Foo',
@@ -851,19 +830,18 @@ describe( "namespaces", ( ) =>
 										title: 'Zap.Zip.Foo.bar.baz',
 									},
 									required: true,
-								}
+								},
 							},
 							additionalProperties: false,
 						},
 					},
 				},
 				additionalProperties: false,
-			}
-		] );
-	} );
+			},
+		]);
+	});
 
-	it( "interface within multiple namespace, use underscore", ( ) =>
-	{
+	it('interface within multiple namespace, use underscore', () => {
 		const coreTypes = convertTypeScriptToCoreTypes(
 			`
 				namespace Zap {
@@ -875,10 +853,10 @@ describe( "namespaces", ( ) =>
 					}
 				}
 			`,
-			{ namespaces: 'join-underscore' }
+			{ namespaces: 'join-underscore' },
 		).data.types;
 
-		equal( coreTypes, [
+		equal(coreTypes, [
 			{
 				name: 'Zap_Zip_Foo',
 				title: 'Zap_Zip_Foo',
@@ -900,19 +878,18 @@ describe( "namespaces", ( ) =>
 										title: 'Zap_Zip_Foo.bar.baz',
 									},
 									required: true,
-								}
+								},
 							},
 							additionalProperties: false,
 						},
 					},
 				},
 				additionalProperties: false,
-			}
-		] );
-	} );
+			},
+		]);
+	});
 
-	it( "interface within multiple namespace, use hoist", ( ) =>
-	{
+	it('interface within multiple namespace, use hoist', () => {
 		const coreTypes = convertTypeScriptToCoreTypes(
 			`
 				namespace Zap {
@@ -924,10 +901,10 @@ describe( "namespaces", ( ) =>
 					}
 				}
 			`,
-			{ namespaces: 'hoist' }
+			{ namespaces: 'hoist' },
 		);
 
-		equal( coreTypes.data.types, [
+		equal(coreTypes.data.types, [
 			{
 				name: 'Foo',
 				title: 'Foo',
@@ -949,21 +926,20 @@ describe( "namespaces", ( ) =>
 										title: 'Foo.bar.baz',
 									},
 									required: true,
-								}
+								},
 							},
 							additionalProperties: false,
 						},
 					},
 				},
 				additionalProperties: false,
-			}
-		] );
+			},
+		]);
 
-		expect( coreTypes.notConvertedTypes.join( ',' ) ).toBe( '' );
-	} );
+		expect(coreTypes.notConvertedTypes.join(',')).toBe('');
+	});
 
-	it( "interface within multiple namespace, use hoist conflict", ( ) =>
-	{
+	it('interface within multiple namespace, use hoist conflict', () => {
 		// Should pick top-level Foo
 		const coreTypes = convertTypeScriptToCoreTypes(
 			`
@@ -979,10 +955,10 @@ describe( "namespaces", ( ) =>
 					baz: number;
 				}
 			`,
-			{ namespaces: 'hoist' }
+			{ namespaces: 'hoist' },
 		);
 
-		equal( coreTypes.data.types, [
+		equal(coreTypes.data.types, [
 			{
 				name: 'Foo',
 				title: 'Foo',
@@ -994,15 +970,13 @@ describe( "namespaces", ( ) =>
 					},
 				},
 				additionalProperties: false,
-			}
-		] );
+			},
+		]);
 
-		expect( coreTypes.notConvertedTypes.join( ',' ) )
-			.toBe( 'Zap.Zip.Foo' );
-	} );
+		expect(coreTypes.notConvertedTypes.join(',')).toBe('Zap.Zip.Foo');
+	});
 
-	it( "interface within multiple namespace, ignore", ( ) =>
-	{
+	it('interface within multiple namespace, ignore', () => {
 		const coreTypes = convertTypeScriptToCoreTypes(
 			`
 				export interface Bar {
@@ -1017,10 +991,10 @@ describe( "namespaces", ( ) =>
 					}
 				}
 			`,
-			{ } // Ignore is default
+			{}, // Ignore is default
 		).data.types;
 
-		equal( coreTypes, [
+		equal(coreTypes, [
 			{
 				name: 'Bar',
 				title: 'Bar',
@@ -1032,17 +1006,14 @@ describe( "namespaces", ( ) =>
 					},
 				},
 				additionalProperties: false,
-			}
-		] );
-	} );
-} );
+			},
+		]);
+	});
+});
 
-
-describe( "unsupported", ( ) =>
-{
-	it( "should warn on non-string index", ( ) =>
-	{
-		const warn = jest.fn( );
+describe('unsupported', () => {
+	it('should warn on non-string index', () => {
+		const warn = jest.fn();
 		const coreTypes = convertTypeScriptToCoreTypes(
 			`
 				export interface Foo {
@@ -1050,10 +1021,10 @@ describe( "unsupported", ( ) =>
 					[ bar: any ]: number;
 				}
 			`,
-			{ warn }
+			{ warn },
 		).data.types;
 
-		equal( coreTypes, [
+		equal(coreTypes, [
 			{
 				name: 'Foo',
 				title: 'Foo',
@@ -1065,18 +1036,16 @@ describe( "unsupported", ( ) =>
 					},
 				},
 				additionalProperties: false,
-			}
-		] );
-		expect( warn.mock.calls.length ).toBe( 1 );
-		expect( warn.mock.calls[ 0 ][ 0 ] ).toMatch( /Will not convert/ );
-	} );
-} );
+			},
+		]);
+		expect(warn.mock.calls.length).toBe(1);
+		expect(warn.mock.calls[0][0]).toMatch(/Will not convert/);
+	});
+});
 
-describe( "generics", ( ) =>
-{
-	it( "generic refs are not supported yet", ( ) =>
-	{
-		const warn = jest.fn( );
+describe('generics', () => {
+	it('generic refs are not supported yet', () => {
+		const warn = jest.fn();
 		const coreTypes = convertTypeScriptToCoreTypes(
 			`
 				export interface Foo {
@@ -1085,10 +1054,10 @@ describe( "generics", ( ) =>
 				}
 				export type Bar = Partial< Foo >;
 			`,
-			{ warn }
+			{ warn },
 		).data.types;
 
-		equal( coreTypes, [
+		equal(coreTypes, [
 			{
 				name: 'Foo',
 				title: 'Foo',
@@ -1112,52 +1081,50 @@ describe( "generics", ( ) =>
 					},
 				},
 				additionalProperties: false,
-			}
-		] );
-		expect( warn.mock.calls.length ).toBe( 2 );
-		expect( warn.mock.calls[ 0 ][ 0 ] ).toMatch( /Will not convert/ );
-		expect( warn.mock.calls[ 1 ][ 0 ] ).toMatch( /Will not convert/ );
-	} );
+			},
+		]);
+		expect(warn.mock.calls.length).toBe(2);
+		expect(warn.mock.calls[0][0]).toMatch(/Will not convert/);
+		expect(warn.mock.calls[1][0]).toMatch(/Will not convert/);
+	});
 
-	it( "generic interfaces are not supported yet", ( ) =>
-	{
-		const warn = jest.fn( );
+	it('generic interfaces are not supported yet', () => {
+		const warn = jest.fn();
 		const coreTypes = convertTypeScriptToCoreTypes(
 			`
 				export interface Foo< T > {
 					foo: T;
 				}
 			`,
-			{ warn, unsupported: 'warn' }
+			{ warn, unsupported: 'warn' },
 		).data.types;
 
-		equal( coreTypes, [ ] );
-		expect( warn.mock.calls.length ).toBe( 1 );
-		expect( warn.mock.calls[ 0 ][ 0 ] )
-			.toMatch( 'Generic types are not supported' );
-	} );
+		equal(coreTypes, []);
+		expect(warn.mock.calls.length).toBe(1);
+		expect(warn.mock.calls[0][0]).toMatch(
+			'Generic types are not supported',
+		);
+	});
 
-	it( "generic types are not supported yet", ( ) =>
-	{
-		const warn = jest.fn( );
+	it('generic types are not supported yet', () => {
+		const warn = jest.fn();
 		const coreTypes = convertTypeScriptToCoreTypes(
 			`
 				export type Foo< T > = number | T;
 			`,
-			{ warn, unsupported: 'warn' }
+			{ warn, unsupported: 'warn' },
 		).data.types;
 
-		equal( coreTypes, [ ] );
-		expect( warn.mock.calls.length ).toBe( 1 );
-		expect( warn.mock.calls[ 0 ][ 0 ] )
-			.toMatch( 'Generic types are not supported' );
-	} );
-} );
+		equal(coreTypes, []);
+		expect(warn.mock.calls.length).toBe(1);
+		expect(warn.mock.calls[0][0]).toMatch(
+			'Generic types are not supported',
+		);
+	});
+});
 
-describe( "omit", ( ) =>
-{
-	it( "handle Omit of one property", ( ) =>
-	{
+describe('omit', () => {
+	it('handle Omit of one property', () => {
 		const coreTypes = convertTypeScriptToCoreTypes(
 			`
 				interface Foo {
@@ -1165,10 +1132,10 @@ describe( "omit", ( ) =>
 					baz: string;
 				}
 				export type Fee = Omit< Foo, 'baz' >;
-			`
+			`,
 		).data.types;
 
-		equal( coreTypes, [
+		equal(coreTypes, [
 			{
 				name: 'Fee',
 				title: 'Fee',
@@ -1184,11 +1151,10 @@ describe( "omit", ( ) =>
 				},
 				additionalProperties: false,
 			},
-		] );
-	} );
+		]);
+	});
 
-	it( "handle Omit of multiple properties", ( ) =>
-	{
+	it('handle Omit of multiple properties', () => {
 		const coreTypes = convertTypeScriptToCoreTypes(
 			`
 				interface Foo {
@@ -1197,10 +1163,10 @@ describe( "omit", ( ) =>
 					bak: string;
 				}
 				export type Fee = Omit< Foo, 'baz' | 'bak' >;
-			`
+			`,
 		).data.types;
 
-		equal( coreTypes, [
+		equal(coreTypes, [
 			{
 				name: 'Fee',
 				title: 'Fee',
@@ -1216,14 +1182,12 @@ describe( "omit", ( ) =>
 				},
 				additionalProperties: false,
 			},
-		] );
-	} );
-} );
+		]);
+	});
+});
 
-describe( "pick", ( ) =>
-{
-	it( "handle Pick of one property", ( ) =>
-	{
+describe('pick', () => {
+	it('handle Pick of one property', () => {
 		const coreTypes = convertTypeScriptToCoreTypes(
 			`
 				interface Foo {
@@ -1231,10 +1195,10 @@ describe( "pick", ( ) =>
 					baz: string;
 				}
 				export type Fee = Pick< Foo, 'bar' >;
-			`
+			`,
 		).data.types;
 
-		equal( coreTypes, [
+		equal(coreTypes, [
 			{
 				name: 'Fee',
 				title: 'Fee',
@@ -1250,11 +1214,10 @@ describe( "pick", ( ) =>
 				},
 				additionalProperties: false,
 			},
-		] );
-	} );
+		]);
+	});
 
-	it( "handle Pick of multiple properties", ( ) =>
-	{
+	it('handle Pick of multiple properties', () => {
 		const coreTypes = convertTypeScriptToCoreTypes(
 			`
 				interface Foo {
@@ -1263,10 +1226,10 @@ describe( "pick", ( ) =>
 					bak: string;
 				}
 				export type Fee = Pick< Foo, 'bar' | 'baz' >;
-			`
+			`,
 		).data.types;
 
-		equal( coreTypes, [
+		equal(coreTypes, [
 			{
 				name: 'Fee',
 				title: 'Fee',
@@ -1289,14 +1252,12 @@ describe( "pick", ( ) =>
 				},
 				additionalProperties: false,
 			},
-		] );
-	} );
-} );
+		]);
+	});
+});
 
-describe( "partial", ( ) =>
-{
-	it( "handle Partial", ( ) =>
-	{
+describe('partial', () => {
+	it('handle Partial', () => {
 		const coreTypes = convertTypeScriptToCoreTypes(
 			`
 				interface Foo {
@@ -1305,10 +1266,10 @@ describe( "partial", ( ) =>
 					bak?: boolean;
 				}
 				export type Fee = Partial< Foo >;
-			`
+			`,
 		).data.types;
 
-		equal( coreTypes, [
+		equal(coreTypes, [
 			{
 				name: 'Fee',
 				title: 'Fee',
@@ -1338,14 +1299,12 @@ describe( "partial", ( ) =>
 				},
 				additionalProperties: false,
 			},
-		] );
-	} );
-} );
+		]);
+	});
+});
 
-describe( "complex partial/pick/omit", ( ) =>
-{
-	it( "handle complex deep case", ( ) =>
-	{
+describe('complex partial/pick/omit', () => {
+	it('handle complex deep case', () => {
 		const coreTypes = convertTypeScriptToCoreTypes(
 			`
 				interface Foo {
@@ -1362,10 +1321,10 @@ describe( "complex partial/pick/omit", ( ) =>
 					>,
 					'a' | 'b'
 				>;
-			`
+			`,
 		).data.types;
 
-		equal( coreTypes, [
+		equal(coreTypes, [
 			{
 				name: 'Fee',
 				title: 'Fee',
@@ -1390,14 +1349,12 @@ describe( "complex partial/pick/omit", ( ) =>
 				},
 				additionalProperties: false,
 			},
-		] );
-	} );
-} );
+		]);
+	});
+});
 
-describe( "extended interfaces", ( ) =>
-{
-	it( "handle extending one interface (ignore)", ( ) =>
-	{
+describe('extended interfaces', () => {
+	it('handle extending one interface (ignore)', () => {
 		const coreTypes = convertTypeScriptToCoreTypes(
 			`
 				interface A {
@@ -1408,11 +1365,11 @@ describe( "extended interfaces", ( ) =>
 				}
 			`,
 			{
-				nonExported: 'ignore'
-			}
+				nonExported: 'ignore',
+			},
 		).data.types;
 
-		equal( coreTypes, [
+		equal(coreTypes, [
 			{
 				name: 'B',
 				title: 'B',
@@ -1429,11 +1386,10 @@ describe( "extended interfaces", ( ) =>
 				},
 				additionalProperties: false,
 			},
-		] );
-	} );
+		]);
+	});
 
-	it( "handle extending one interface (inline)", ( ) =>
-	{
+	it('handle extending one interface (inline)', () => {
 		const coreTypes = convertTypeScriptToCoreTypes(
 			`
 				interface A {
@@ -1444,11 +1400,11 @@ describe( "extended interfaces", ( ) =>
 				}
 			`,
 			{
-				nonExported: 'inline'
-			}
+				nonExported: 'inline',
+			},
 		).data.types;
 
-		equal( coreTypes, [
+		equal(coreTypes, [
 			{
 				name: 'B',
 				title: 'B',
@@ -1486,11 +1442,10 @@ describe( "extended interfaces", ( ) =>
 					},
 				],
 			},
-		] );
-	} );
+		]);
+	});
 
-	it( "handle extending one interface (include-if-referenced)", ( ) =>
-	{
+	it('handle extending one interface (include-if-referenced)', () => {
 		const coreTypes = convertTypeScriptToCoreTypes(
 			`
 				interface A {
@@ -1501,11 +1456,11 @@ describe( "extended interfaces", ( ) =>
 				}
 			`,
 			{
-				nonExported: 'include-if-referenced'
-			}
+				nonExported: 'include-if-referenced',
+			},
 		).data.types;
 
-		equal( coreTypes, [
+		equal(coreTypes, [
 			{
 				name: 'B',
 				title: 'B',
@@ -1547,11 +1502,10 @@ describe( "extended interfaces", ( ) =>
 				},
 				additionalProperties: false,
 			},
-		] );
-	} );
+		]);
+	});
 
-	it( "handle extending two interfaces (ignore)", ( ) =>
-	{
+	it('handle extending two interfaces (ignore)', () => {
 		const coreTypes = convertTypeScriptToCoreTypes(
 			`
 				interface A {
@@ -1565,11 +1519,11 @@ describe( "extended interfaces", ( ) =>
 				}
 			`,
 			{
-				nonExported: 'ignore'
-			}
+				nonExported: 'ignore',
+			},
 		).data.types;
 
-		equal( coreTypes, [
+		equal(coreTypes, [
 			{
 				name: 'B',
 				title: 'B',
@@ -1611,11 +1565,10 @@ describe( "extended interfaces", ( ) =>
 					},
 				],
 			},
-		] );
-	} );
+		]);
+	});
 
-	it( "handle extending two interfaces (inline)", ( ) =>
-	{
+	it('handle extending two interfaces (inline)', () => {
 		const coreTypes = convertTypeScriptToCoreTypes(
 			`
 				interface A {
@@ -1629,11 +1582,11 @@ describe( "extended interfaces", ( ) =>
 				}
 			`,
 			{
-				nonExported: 'inline'
-			}
+				nonExported: 'inline',
+			},
 		).data.types;
 
-		equal( coreTypes, [
+		equal(coreTypes, [
 			{
 				name: 'B',
 				title: 'B',
@@ -1691,11 +1644,10 @@ describe( "extended interfaces", ( ) =>
 					},
 				],
 			},
-		] );
-	} );
+		]);
+	});
 
-	it( "handle extending two interfaces (include-if-referenced)", ( ) =>
-	{
+	it('handle extending two interfaces (include-if-referenced)', () => {
 		const coreTypes = convertTypeScriptToCoreTypes(
 			`
 				interface A {
@@ -1709,11 +1661,11 @@ describe( "extended interfaces", ( ) =>
 				}
 			`,
 			{
-				nonExported: 'include-if-referenced'
-			}
+				nonExported: 'include-if-referenced',
+			},
 		).data.types;
 
-		equal( coreTypes, [
+		equal(coreTypes, [
 			{
 				name: 'B',
 				title: 'B',
@@ -1775,6 +1727,6 @@ describe( "extended interfaces", ( ) =>
 				},
 				additionalProperties: false,
 			},
-		] );
-	} );
-} );
+		]);
+	});
+});
