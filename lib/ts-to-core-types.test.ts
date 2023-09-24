@@ -64,6 +64,21 @@ it( "negative numeric literal type", ( ) =>
 	] );
 } );
 
+it( "BigInt Support", ( ) =>
+{
+	const coreTypes = convertTypeScriptToCoreTypes( `
+	export type Foo = bigint;
+	` ).data.types;
+
+	equal( coreTypes, [
+		{
+			name: 'Foo',
+			title: 'Foo',
+			type: 'integer',
+		}
+	] );
+} );
+
 it( "basic interface with additional properties", ( ) =>
 {
 	const coreTypes = convertTypeScriptToCoreTypes( `
