@@ -528,6 +528,9 @@ function fromTsTypeNode(
 	else if ( node.kind === ts.SyntaxKind.NumberKeyword )
 		return { type: 'number', ...decorateNode( node ) };
 
+	else if ( node.kind === ts.SyntaxKind.BigIntKeyword )
+		return { type: 'integer', ...decorateNode( node ) };
+
 	else if ( node.kind === ts.SyntaxKind.BooleanKeyword )
 		return { type: 'boolean', ...decorateNode( node ) };
 
